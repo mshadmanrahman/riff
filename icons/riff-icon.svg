@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <linearGradient id="bubble" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#F0EEFF" stop-opacity="0.95"/>
+    </linearGradient>
+    <linearGradient id="spark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBBF24"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded square background -->
+  <rect x="4" y="4" width="120" height="120" rx="28" ry="28" fill="url(#bg)"/>
+
+  <!-- Subtle inner shadow/glow -->
+  <rect x="4" y="4" width="120" height="120" rx="28" ry="28" fill="none" stroke="white" stroke-opacity="0.15" stroke-width="2"/>
+
+  <!-- Main speech bubble (larger, back) -->
+  <path d="M30 38 C30 31, 36 25, 43 25 L85 25 C92 25, 98 31, 98 38 L98 62 C98 69, 92 75, 85 75 L58 75 L44 87 L47 75 L43 75 C36 75, 30 69, 30 62 Z"
+        fill="url(#bubble)"
+        stroke="white" stroke-width="1" stroke-opacity="0.3"/>
+
+  <!-- Second speech bubble (smaller, front-right, overlapping) -->
+  <path d="M52 52 C52 46.5, 56.5 42, 62 42 L95 42 C100.5 42, 105 46.5, 105 52 L105 72 C105 77.5, 100.5 82, 95 82 L78 82 L68 91 L70 82 L62 82 C56.5 82, 52 77.5, 52 72 Z"
+        fill="white" fill-opacity="0.25"
+        stroke="white" stroke-width="1.5" stroke-opacity="0.6"/>
+
+  <!-- Musical note / riff symbol inside main bubble -->
+  <!-- Eighth note pair (two beamed eighth notes) -->
+  <g transform="translate(52, 36)">
+    <!-- Beam connecting the two notes -->
+    <rect x="4" y="0" width="22" height="4" rx="1.5" fill="url(#bg)" opacity="0.8"/>
+    <!-- Left stem -->
+    <rect x="4" y="0" width="3" height="22" rx="1" fill="url(#bg)" opacity="0.8"/>
+    <!-- Right stem -->
+    <rect x="23" y="0" width="3" height="18" rx="1" fill="url(#bg)" opacity="0.8"/>
+    <!-- Left note head -->
+    <ellipse cx="5" cy="24" rx="6" ry="4.5" transform="rotate(-20, 5, 24)" fill="url(#bg)" opacity="0.85"/>
+    <!-- Right note head -->
+    <ellipse cx="24" cy="20" rx="6" ry="4.5" transform="rotate(-20, 24, 20)" fill="url(#bg)" opacity="0.85"/>
+  </g>
+
+  <!-- Spark/energy accent (top-right) -->
+  <g transform="translate(92, 18)">
+    <path d="M0 8 L4 0 L5 6 L10 2 L6 9 L8 8 L3 14 Z" fill="url(#spark)"/>
+  </g>
+
+  <!-- Small sparkle dots -->
+  <circle cx="88" cy="20" r="1.5" fill="#FBBF24" opacity="0.8"/>
+  <circle cx="106" cy="28" r="1" fill="#FBBF24" opacity="0.6"/>
+</svg>

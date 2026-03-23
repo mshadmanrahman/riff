@@ -1,0 +1,245 @@
+/* Riff - Popup Styles */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #0a0a0a;
+  color: #e5e5e5;
+  width: 340px;
+  min-height: 200px;
+}
+
+.container {
+  padding: 16px;
+}
+
+/* Header */
+
+header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #262626;
+}
+
+h1 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+
+.tagline {
+  font-size: 11px;
+  color: #737373;
+  font-weight: 400;
+}
+
+/* States */
+
+.state {
+  display: block;
+}
+
+.state.hidden {
+  display: none;
+}
+
+/* Buttons */
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.btn.primary {
+  background: #2563eb;
+  color: #fff;
+}
+
+.btn.primary:hover {
+  background: #3b82f6;
+}
+
+.btn.secondary {
+  background: #1a1a1a;
+  color: #a3a3a3;
+  border: 1px solid #333;
+}
+
+.btn.secondary:hover {
+  background: #262626;
+  color: #e5e5e5;
+}
+
+.btn.ghost {
+  background: transparent;
+  color: #737373;
+  padding: 6px 16px;
+  font-weight: 400;
+}
+
+.btn.ghost:hover {
+  color: #a3a3a3;
+}
+
+/* Messages */
+
+.message {
+  text-align: center;
+  padding: 24px 0;
+  font-size: 13px;
+  color: #737373;
+}
+
+.message.error {
+  color: #ef4444;
+}
+
+/* Spinner */
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  margin: 24px auto 8px;
+  border: 2px solid #333;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Result */
+
+.result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.badge.reply {
+  background: #1e3a5f;
+  color: #60a5fa;
+}
+
+.badge.comment {
+  background: #1a3f2e;
+  color: #4ade80;
+}
+
+.meta {
+  font-size: 11px;
+  color: #737373;
+}
+
+/* Preview */
+
+.preview {
+  background: #141414;
+  border: 1px solid #262626;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  max-height: 180px;
+  overflow-y: auto;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #a3a3a3;
+}
+
+.preview .post-author {
+  font-weight: 600;
+  color: #e5e5e5;
+  margin-bottom: 4px;
+}
+
+.preview .post-excerpt {
+  color: #737373;
+  margin-bottom: 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.preview .comment-preview {
+  border-left: 2px solid #333;
+  padding-left: 8px;
+  margin-top: 6px;
+  font-size: 11px;
+}
+
+.preview .comment-preview .author {
+  font-weight: 600;
+  color: #d4d4d4;
+}
+
+/* Feedback */
+
+.feedback {
+  text-align: center;
+  font-size: 12px;
+  color: #4ade80;
+  padding: 8px 0 0;
+  animation: fadeIn 0.2s ease;
+}
+
+.feedback.hidden {
+  display: none;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Scrollbar */
+
+.preview::-webkit-scrollbar {
+  width: 4px;
+}
+
+.preview::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.preview::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 2px;
+}

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Riff</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Riff</h1>
+      <span class="tagline">LinkedIn Engagement Assistant</span>
+    </header>
+
+    <div id="not-linkedin" class="state hidden">
+      <p class="message">Navigate to a LinkedIn post to use Riff.</p>
+    </div>
+
+    <div id="ready" class="state">
+      <div class="actions">
+        <button id="extract-btn" class="btn primary">
+          Extract Post + Comments
+        </button>
+        <button id="load-more-btn" class="btn secondary">
+          Load More Comments First
+        </button>
+        <button id="diagnose-btn" class="btn ghost">
+          Diagnose DOM
+        </button>
+      </div>
+    </div>
+
+    <div id="loading" class="state hidden">
+      <div class="spinner"></div>
+      <p class="message">Extracting...</p>
+    </div>
+
+    <div id="result" class="state hidden">
+      <div class="result-header">
+        <span id="mode-badge" class="badge">REPLY MODE</span>
+        <span id="comment-count" class="meta"></span>
+      </div>
+
+      <div id="preview" class="preview"></div>
+
+      <div class="actions">
+        <button id="copy-btn" class="btn primary">
+          Copy to Clipboard
+        </button>
+        <button id="copy-json-btn" class="btn secondary">
+          Copy as JSON
+        </button>
+        <button id="re-extract-btn" class="btn ghost">
+          Re-extract
+        </button>
+      </div>
+
+      <p id="copy-feedback" class="feedback hidden">Copied! Paste into Claude Code.</p>
+    </div>
+
+    <div id="error" class="state hidden">
+      <p id="error-message" class="message error"></p>
+      <button id="retry-btn" class="btn secondary">Try Again</button>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
