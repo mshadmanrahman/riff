@@ -785,6 +785,47 @@
     return comments;
   };
 
+  // ─── Post URL Extraction ──────────────────────────────────
+  // On single-post pages, window.location.href is the correct URL.
+  // On the feed page, window.location.href is just /feed/ for ALL posts.
+  // We extract the actual post permalink from the DOM element.
+
+  const extractPostUrl = (postEl, isFeedPage) => {
+    // Strategy 1: data-urn attribute → construct permalink
+    const urn = postEl.getAttribute("data-urn") || postEl.getAttribute("data-id") || "";
+    if (urn) {
+      const activityMatch = urn.match(/urn:li:activity:(\d+)/);
+      if (activityMatch) {
+        return `https://www.linkedin.com/feed/update/urn:li:activity:${activityMatch[1]}/`;
+      }
+      const ugcMatch = urn.match(/urn:li:ugcPost:(\d+)/);
+      if (ugcMatch) {
+        return `https://www.linkedin.com/feed/update/urn:li:ugcPost:${ugcMatch[1]}/`;
+      }
+    }
+
+    // Strategy 2: Find a permalink link in the post (timestamp links usually point to the post)
+    const timeLink = postEl.querySelector('a[href*="/feed/update/"], a[href*="/posts/"]');
+    if (timeLink) {
+      const href = timeLink.getAttribute("href") || "";
+      if (href.startsWith("http")) return href.split("?")[0];
+      if (href.startsWith("/")) return `https://www.linkedin.com${href.split("?")[0]}`;
+    }
+
+    // Strategy 3: For feed posts, look for any link containing activity URN
+    if (isFeedPage) {
+      const allLinks = postEl.querySelectorAll("a[href]");
+      for (const link of allLinks) {
+        const href = link.getAttribute("href") || "";
+        const match = href.match(/(\/feed\/update\/urn:li:(?:activity|ugcPost):\d+)/);
+        if (match) return `https://www.linkedin.com${match[1]}/`;
+      }
+    }
+
+    // Fallback: current page URL (correct for single-post pages)
+    return window.location.href;
+  };
+
   // ═══════════════════════════════════════════════════════════
   // ─── MAIN EXTRACTION (unified entry point) ─────────────────
   // ═══════════════════════════════════════════════════════════
@@ -874,7 +915,7 @@
           headline: authorHeadline,
           text: postText,
           type: postType,
-          url: window.location.href,
+          url: extractPostUrl(postEl, true),
         },
         engagement: {
           likes: likeCount,
@@ -926,7 +967,7 @@
         headline: authorHeadline,
         text: postText,
         type: postType,
-        url: window.location.href,
+        url: extractPostUrl(postEl, false),
       },
       engagement: {
         likes,
