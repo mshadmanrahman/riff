@@ -42,7 +42,12 @@
       });
     } else {
       lines.push("### Comments");
-      lines.push("No comments extracted. Try clicking 'Load more comments' on the post first.");
+      const hasCommentCount = data.engagement?.comments > 0;
+      if (hasCommentCount) {
+        lines.push(`No comments loaded in DOM yet (${data.engagement.comments} exist). Click the comments section on the post to expand them, then re-extract.`);
+      } else {
+        lines.push("No comments found. Try clicking 'Load more comments' on the post first.");
+      }
       lines.push("");
     }
 
@@ -112,9 +117,9 @@
     showState("loading");
 
     try {
-      // Ensure content script is injected and up-to-date.
-      // First, try to remove any old listeners by injecting a reset,
-      // then inject the current content.js
+      // Always re-inject content.js to get the freshest code.
+      // The version guard inside content.js ensures old listeners yield
+      // to this new injection, preventing stale data races.
       try {
         await chrome.scripting.executeScript({
           target: { tabId: tab.id },
@@ -124,8 +129,10 @@
         // Script may already be injected, that's fine
       }
 
-      // Give the script a moment to register its listener
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      // Wait for the script to register its listener and for LinkedIn's
+      // SPA-rendered DOM to be fully settled. 100ms was too short for
+      // LinkedIn's lazy-loaded feed content.
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
       const response = await chrome.tabs.sendMessage(tab.id, { action: "extract" });
 
