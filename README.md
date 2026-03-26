@@ -24,15 +24,13 @@
 
 ---
 
+<p align="center">
+  <img src="riff-demo.gif" alt="Riff Demo" width="720">
+</p>
+
 **Riff** is a Chrome extension that extracts LinkedIn posts and comments into clean, structured markdown. One click. Copy to clipboard. Paste into any AI tool to draft thoughtful replies that actually reference what people said.
 
 The best LinkedIn comments add unique value. But with 30+ comments on every post, most people either skip reading them or end up saying what someone already said. Riff gives you the full conversation context so your reply stands out.
-
-<p align="center">
-  <a href="https://youtu.be/FrJWA9N00C4">
-    <img src="https://img.shields.io/badge/▶%20Watch%20the%2060s%20demo-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Watch Demo">
-  </a>
-</p>
 
 ---
 
