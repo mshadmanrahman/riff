@@ -129,10 +129,31 @@
         // Script may already be injected, that's fine
       }
 
-      // Wait for the script to register its listener and for LinkedIn's
-      // SPA-rendered DOM to be fully settled. 100ms was too short for
-      // LinkedIn's lazy-loaded feed content.
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      // Smart wait: poll until content script confirms the DOM matches
+      // the current tab URL. LinkedIn's SPA may not have finished rendering
+      // the new post's DOM, so a fixed timeout is unreliable.
+      // We send a lightweight "ping" that returns the URL the content script
+      // sees, and compare it against tab.url.
+      const maxWaitMs = 3000;
+      const pollIntervalMs = 150;
+      const startTime = Date.now();
+
+      // Initial short wait for the script to register its listener
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
+      // For single post pages, verify the DOM has the right content loaded
+      const isSinglePost = tab.url.includes("/feed/update/") || tab.url.includes("/posts/");
+      if (isSinglePost) {
+        while (Date.now() - startTime < maxWaitMs) {
+          try {
+            const ping = await chrome.tabs.sendMessage(tab.id, { action: "ping" });
+            if (ping && ping.ready) break;
+          } catch (e) {
+            // Content script not ready yet, keep polling
+          }
+          await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+        }
+      }
 
       const response = await chrome.tabs.sendMessage(tab.id, { action: "extract" });
 

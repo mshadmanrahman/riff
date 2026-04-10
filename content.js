@@ -1002,6 +1002,60 @@
   // ─── MAIN EXTRACTION (unified entry point) ─────────────────
   // ═══════════════════════════════════════════════════════════
 
+  // ─── URN Extraction from URL ─────────────────────────────
+  // LinkedIn URLs encode the post identity as a URN, e.g.:
+  //   /feed/update/urn:li:activity:1234567890/
+  //   /feed/update/urn:li:ugcPost:1234567890/
+  // We use this to find the EXACT post element in the DOM,
+  // avoiding stale elements from the feed behind an overlay.
+
+  const extractUrnFromUrl = () => {
+    const path = window.location.pathname;
+    const activityMatch = path.match(/\/feed\/update\/urn:li:(?:activity|ugcPost):(\d+)/);
+    if (activityMatch) return activityMatch[0].replace("/feed/update/", "");
+    return null;
+  };
+
+  const findPostByUrn = (urn) => {
+    if (!urn) return null;
+    // Try exact data-urn match
+    const byUrn = document.querySelector(`[data-urn="${urn}"], [data-urn*="${urn}"]`);
+    if (byUrn) return byUrn;
+    // Try data-id match
+    const byId = document.querySelector(`[data-id="${urn}"], [data-id*="${urn}"]`);
+    if (byId) return byId;
+    // Extract numeric ID and search more broadly
+    const idMatch = urn.match(/(\d+)$/);
+    if (idMatch) {
+      const numericId = idMatch[1];
+      const byPartial = document.querySelector(`[data-urn*="${numericId}"], [data-id*="${numericId}"]`);
+      if (byPartial) return byPartial;
+    }
+    return null;
+  };
+
+  // LinkedIn opens posts in modal/overlay containers when clicked from the feed.
+  // The overlay sits on top of the feed, so we should extract from it first.
+  const findOverlayPost = () => {
+    // LinkedIn's modal overlays use role="dialog" or specific overlay classes
+    const overlaySelectors = [
+      '[role="dialog"] .feed-shared-update-v2',
+      '[role="dialog"] .occludable-update',
+      '[role="dialog"] [data-urn*="urn:li:activity"]',
+      '.scaffold-layout-overlay .feed-shared-update-v2',
+      '.scaffold-layout-overlay [data-urn*="urn:li:activity"]',
+      '.artdeco-modal .feed-shared-update-v2',
+      '.artdeco-modal [data-urn*="urn:li:activity"]',
+      // LinkedIn's detail overlay uses this pattern
+      '.scaffold-finite-scroll--infinite .feed-shared-update-v2',
+    ];
+    for (const sel of overlaySelectors) {
+      const el = document.querySelector(sel);
+      if (el) return el;
+    }
+    return null;
+  };
+
   const extractPost = () => {
     let postEl = null;
     let isFeedPage = false;
@@ -1011,9 +1065,25 @@
       window.location.pathname.includes("/posts/");
 
     if (isSinglePostPage) {
-      // ── Single post page: use class-based selectors ──
-      postEl = document.querySelector(SELECTORS.singlePost) ||
-        document.querySelector(SELECTORS.feedPost);
+      // ── Single post page: find the CORRECT post ──
+      // LinkedIn's SPA keeps old feed items in the DOM behind overlays.
+      // We must find the specific post matching the current URL, not just
+      // the first .feed-shared-update-v2 in DOM order.
+
+      // Priority 1: Match by URN from URL (most reliable)
+      const urn = extractUrnFromUrl();
+      postEl = findPostByUrn(urn);
+
+      // Priority 2: Check for overlay/modal container
+      if (!postEl) {
+        postEl = findOverlayPost();
+      }
+
+      // Priority 3: Fall back to generic selectors (original behavior)
+      if (!postEl) {
+        postEl = document.querySelector(SELECTORS.singlePost) ||
+          document.querySelector(SELECTORS.feedPost);
+      }
     } else {
       // ── Feed or other page: try class-based first, then feed strategy ──
       const posts = document.querySelectorAll(SELECTORS.feedPost);
@@ -1268,6 +1338,21 @@
       return false;
     }
 
+    if (request.action === "ping") {
+      // Lightweight readiness check: verify the DOM has content matching
+      // the current URL. Used by popup.js to poll until LinkedIn's SPA
+      // has finished rendering after navigation.
+      const urn = extractUrnFromUrl();
+      if (urn) {
+        // Single post page: ready when we can find the post by URN or in an overlay
+        const found = findPostByUrn(urn) || findOverlayPost();
+        sendResponse({ ready: !!found, url: window.location.href });
+      } else {
+        // Feed page or non-post page: always ready
+        sendResponse({ ready: true, url: window.location.href });
+      }
+      return true;
+    }
     if (request.action === "extract") {
       const data = extractPost();
       const markdown = formatAsMarkdown(data);
