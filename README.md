@@ -5,6 +5,10 @@
 <h1 align="center">Riff</h1>
 
 <p align="center">
+  <a href="https://github.com/mshadmanrahman/riff/stargazers"><img src="https://img.shields.io/github/stars/mshadmanrahman/riff?style=social" alt="GitHub stars" /></a>
+</p>
+
+<p align="center">
   <strong>Read the room before you comment.</strong>
 </p>
 
@@ -262,6 +266,19 @@ cd riff
 In music, a **riff** is a short, repeated phrase that forms the foundation of a song. On LinkedIn, your comment is your riff on someone else's melody. Riff (the extension) gives you the sheet music: the full post, every comment, all the context. So your riff actually adds to the song instead of repeating what's already been played.
 
 ---
+
+## Support
+
+If this saved you time, give it a star -- it helps others find it and keeps development going.
+
+## See Also
+
+- **[pm-pilot](https://github.com/mshadmanrahman/pm-pilot)** -- Claude Code configured for PMs. Meeting prep, PRDs, market sizing -- 25 skills, ready to install.
+- **[root-kg](https://github.com/mshadmanrahman/root-kg)** -- Personal knowledge graph. Ask questions across all your notes, meetings, and emails.
+- **[morning-digest](https://github.com/mshadmanrahman/morning-digest)** -- Morning briefing automation. Calendar, email, news in one digest.
+- **[discovery-md](https://github.com/mshadmanrahman/discovery-md)** -- AI product discovery for PMs.
+- **[ceremonies](https://github.com/mshadmanrahman/ceremonies)** -- Agile ceremonies that don't suck.
+- **[claudecode-guide](https://github.com/mshadmanrahman/claudecode-guide)** -- Friendly guide to Claude Code. Also at [claudecodeguide.dev](https://claudecodeguide.dev).
 
 ## 📜 License
 
