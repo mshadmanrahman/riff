@@ -6,3 +6,6 @@ promo-video/out/
 
 # Release artifacts (use GitHub Releases instead)
 *.zip
+
+# Promo-video subproject kept local only
+promo-video/
