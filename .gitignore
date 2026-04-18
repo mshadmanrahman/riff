@@ -3,3 +3,6 @@ out/
 .DS_Store
 promo-video/node_modules/
 promo-video/out/
+
+# Release artifacts (use GitHub Releases instead)
+*.zip
