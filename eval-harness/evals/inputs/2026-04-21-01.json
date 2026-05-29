@@ -1,0 +1,20 @@
+{
+  "mode": "COMMENT",
+  "post": {
+    "author": "",
+    "headline": "",
+    "text": "Shadman Rahman One extension that comes to mind, Right now: guardrails define boundaries, evals define quality.But the missing layer might befeedback loops from real usage. For example:-capturing how outputs actually get used-whether suggested actions lead to outcomes-feeding that back into evals over timeCurious, How do you define good enough in evals? Do these evolve per use case or stay standardized?",
+    "type": "text",
+    "url": "https://www.linkedin.com/feed/update/urn:li:ugcPost:7451977824934092800/"
+  },
+  "engagement": {
+    "likes": 0,
+    "comments": 0
+  },
+  "comments": [],
+  "extractedAt": "2026-04-26T21:40:33.853Z",
+  "_debug": {
+    "strategy": "single-post",
+    "note": "Source: Jahin Showic comment on Shadman's Crucible announcement post. Asks two questions: how do you define 'good enough' in evals, and do they evolve per use case or stay standardized."
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "mode": "COMMENT",
+  "post": {
+    "author": "",
+    "headline": "",
+    "text": "The full story with wireframes and research artifacts from 2016: https://open.substack.com/pub/shadmanrahman/p/i-redesigned-the-gateway-that-brought?r=5r9nc&utm_campaign=post&utm_medium=web&showWelcomeOnShare=trueI write about what works and what breaks in product and design at Product Field Notes. Subscribe if this resonated.",
+    "type": "text",
+    "url": "https://www.linkedin.com/feed/update/urn:li:ugcPost:7448310174903103489/"
+  },
+  "engagement": {
+    "likes": 0,
+    "comments": 0
+  },
+  "comments": [
+    {
+      "author": "Sadia Hamid",
+      "headline": "Driving Growth Through Product Leadership, Product Marketing & Business Analysis | GTM Strategy, Digital Transformation & Innovation | Telecom, Fintech, FMCG, Consulting",
+      "text": "\"I designed the front door. The business team built the house.\" That line alone is worth saving. Honest attribution is rare. The work is impressive, but the way you talk about it is what makes this worth sharing.",
+      "timestamp": "2w",
+      "likes": 0,
+      "replies": []
+    }
+  ],
+  "extractedAt": "2026-04-26T21:42:00.246Z",
+  "_debug": {
+    "strategy": "single-post",
+    "note": "Source: Sadia Hamid commented on Shadman's gateway redesign post. She quoted his line about honest attribution and praised the framing. Reply target = Sadia."
+  }
+}
