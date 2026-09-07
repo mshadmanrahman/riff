@@ -54,3 +54,32 @@ English
 2. Riff popup showing extracted post with REPLY mode badge and comments
 3. The markdown output pasted into an AI tool
 4. Before/after: LinkedIn post → Riff extraction → AI-drafted comment
+
+## Privacy practices tab (copy each box as written)
+
+**Single purpose description**
+Riff extracts one LinkedIn post and its comments into markdown and hands that text to the AI chat site the user picks, with the message box pre-filled. It does nothing else.
+
+**activeTab**
+Reads the LinkedIn page the user is looking at when they click the Riff icon, so the post and comments on that page can be extracted.
+
+**scripting**
+Injects the extraction script into the LinkedIn tab, and injects a small script into the AI tab the user chose (claude.ai, chatgpt.com or gemini.google.com) that pastes the extracted text into the message box. The script does not press send.
+
+**storage**
+Stores one setting: which AI site the user picked in the "Send to" dropdown, so it is preselected next time. No content is stored.
+
+**clipboardWrite**
+Copies the extracted markdown to the clipboard when the user clicks Copy, or as a fallback when the AI message box cannot be found.
+
+**Host permission: linkedin.com**
+The extraction script runs only on LinkedIn pages. The extension has no function anywhere else.
+
+**Optional host permissions: claude.ai, chatgpt.com, gemini.google.com**
+Requested one site at a time, on the first click of "Send to", so the paste script can fill the message box on that site. The user can decline and use the clipboard instead.
+
+**Remote code**
+No. All code ships in the package.
+
+**Data usage**
+No user data is collected, transmitted or sold. Everything runs locally in the browser. The only data leaving the browser is the text the user chooses to send to the AI site they opened, and that goes through the user's own session on that site.
