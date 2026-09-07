@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Riff - LinkedIn Engagement Assistant",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "Extract LinkedIn posts and all their comments, then send them straight to Claude, ChatGPT or Gemini to draft your reply.",
   "permissions": ["activeTab", "clipboardWrite", "scripting", "storage"],
   "host_permissions": ["https://www.linkedin.com/*"],

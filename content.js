@@ -262,22 +262,29 @@
     return posts;
   };
 
+  // Distance from the viewport centre line to the nearest edge of the
+  // element, zero when the element spans the centre. Measuring to the
+  // element's own midpoint (the old rule) let a short post just below the
+  // fold beat a tall post that filled the screen.
+  const distanceToViewportCenter = (el) => {
+    const viewportCenter = window.innerHeight / 2;
+    const rect = el.getBoundingClientRect();
+    if (rect.height === 0) return Infinity;
+    if (rect.top <= viewportCenter && rect.bottom >= viewportCenter) return 0;
+    return rect.top > viewportCenter ? rect.top - viewportCenter : viewportCenter - rect.bottom;
+  };
+
   const findClosestToViewportCenter = (elements) => {
     if (elements.length === 0) return null;
-    const viewportCenter = window.innerHeight / 2;
     let closest = null;
     let closestDist = Infinity;
-
     for (const el of elements) {
-      const rect = el.getBoundingClientRect();
-      const center = rect.top + rect.height / 2;
-      const dist = Math.abs(center - viewportCenter);
+      const dist = distanceToViewportCenter(el);
       if (dist < closestDist) {
         closestDist = dist;
         closest = el;
       }
     }
-
     return closest;
   };
 
@@ -1205,10 +1212,17 @@
           document.querySelector(SELECTORS.feedPost);
       }
     } else {
-      // ── Feed or other page: try class-based first, then feed strategy ──
-      const posts = document.querySelectorAll(SELECTORS.feedPost);
-      if (posts.length > 0) {
-        postEl = findClosestToViewportCenter(Array.from(posts));
+      // ── Feed or other page ──
+      // Class-based markers survive only on some feed posts today (promoted
+      // ones, mostly), so judging them alone picked the sponsored post under
+      // the one on screen. Rank class-based and semantic candidates together
+      // and let the semantic path handle the winner when it is not class-based.
+      const classPosts = Array.from(document.querySelectorAll(SELECTORS.feedPost));
+      const semanticPosts = findFeedPosts();
+      const winner = findClosestToViewportCenter([...new Set([...classPosts, ...semanticPosts])]);
+      if (winner) {
+        postEl = winner;
+        if (!classPosts.includes(winner)) isFeedPage = true;
       }
     }
 
