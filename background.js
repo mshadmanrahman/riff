@@ -34,18 +34,21 @@ const sendToAI = async ({ target, text }) => {
   const granted = await chrome.permissions.contains({ origins: [cfg.origin] });
   if (!granted) throw new Error(`Permission for ${cfg.label} was not granted.`);
 
-  await chrome.storage.session.set({
-    riffPayload: { text, target, label: cfg.label, createdAt: Date.now() },
-  });
-
   const tab = await chrome.tabs.create({ url: cfg.url, active: true });
   await waitForTabComplete(tab.id);
 
+  // Define the filler, then call it with the payload as an argument.
+  // Both run in the same isolated world, so window.__riffRun is shared.
   await chrome.scripting.executeScript({
     target: { tabId: tab.id },
     files: ["ai-fill.js"],
   });
-  return { tabId: tab.id };
+  const [injected] = await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    func: (payload) => window.__riffRun && window.__riffRun(payload),
+    args: [{ text, target, label: cfg.label }],
+  });
+  return { tabId: tab.id, fill: injected && injected.result };
 };
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {

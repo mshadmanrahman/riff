@@ -1,7 +1,7 @@
 // Riff - composer filler
 // Injected into claude.ai, chatgpt.com or gemini.google.com after the tab
-// finishes loading. Reads the payload Riff stored, finds the chat composer,
-// inserts the text, and leaves the send button to the user.
+// finishes loading. background.js then hands it the payload, it finds the
+// chat composer, inserts the text, and leaves the send button to the user.
 //
 // The core is a plain function so it can be exercised in a devtools console:
 //   riffFillComposer("hello", "claude").then(console.log)
@@ -140,18 +140,19 @@
 
   window.riffFillComposer = riffFillComposer;
 
-  // ── Entry point when injected by background.js ──
-  if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.session) {
-    chrome.storage.session.get("riffPayload").then(async ({ riffPayload }) => {
-      if (!riffPayload || !riffPayload.text) return;
-      if (Date.now() - (riffPayload.createdAt || 0) > 5 * 60 * 1000) return;
-      await chrome.storage.session.remove("riffPayload");
-      const result = await riffFillComposer(riffPayload.text, riffPayload.target);
-      if (result.ok) {
-        toast("Riff pasted the post and comments. Read it over, then press Enter to send.", true);
-      } else {
-        toast("Riff couldn't find the message box. The text is on your clipboard, paste it with Cmd+V / Ctrl+V.", false);
-      }
-    }).catch(() => {});
-  }
+  // ── Entry point ──
+  // background.js injects this file, then calls window.__riffRun(payload)
+  // with the text as an argument. Session storage is not used: content
+  // scripts cannot read chrome.storage.session unless the extension opens
+  // it up, and that silent failure is exactly what v1.3.0 shipped with.
+  window.__riffRun = async (payload) => {
+    if (!payload || !payload.text) return { ok: false, reason: "empty payload" };
+    const result = await riffFillComposer(payload.text, payload.target);
+    if (result.ok) {
+      toast("Riff pasted the post and comments. Read it over, then press Enter to send.", true);
+    } else {
+      toast("Riff couldn't find the message box. The text is on your clipboard, paste it with Cmd+V / Ctrl+V.", false);
+    }
+    return result;
+  };
 })();
