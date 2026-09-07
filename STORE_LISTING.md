@@ -1,19 +1,19 @@
 # Chrome Web Store Listing
 
 ## Short Description (132 chars max)
-Extract LinkedIn posts and comments as structured markdown. Copy to clipboard for AI-powered reply drafting.
+Extract LinkedIn posts and all their comments, then send them straight to Claude, ChatGPT or Gemini to draft your reply.
 
 ## Detailed Description
 
-Riff extracts LinkedIn posts and comments into clean, structured markdown that you can paste into any AI tool (Claude, ChatGPT, etc.) to draft thoughtful replies and comments.
+Riff extracts a LinkedIn post and every one of its comments into clean, structured markdown, then opens Claude, ChatGPT or Gemini with the message box already filled. You read it and press Enter.
 
 **How it works:**
 
-1. Navigate to any LinkedIn post or scroll your feed
+1. Open any LinkedIn post
 2. Click the Riff icon
-3. Hit "Extract Post + Comments"
-4. Click "Copy to Clipboard"
-5. Paste into your favorite AI tool
+3. Hit "Extract Post + Comments". Riff expands the whole comment thread for you
+4. Click "Send to Claude" (or ChatGPT, Gemini, or Clipboard only)
+5. Press Enter in the AI tab
 6. Get a draft reply that matches the conversation context
 
 **Two modes:**
@@ -33,7 +33,7 @@ Riff extracts LinkedIn posts and comments into clean, structured markdown that y
 
 - Zero data collection. Everything runs locally in your browser.
 - No analytics, no tracking, no servers.
-- Content only exists in your clipboard after you copy it.
+- Content goes only to your clipboard or to the AI tab you chose to open.
 - Open source: https://github.com/mshadmanrahman/riff
 
 **Works on:**

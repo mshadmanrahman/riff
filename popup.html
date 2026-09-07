@@ -23,7 +23,7 @@
           Extract Post + Comments
         </button>
         <button id="load-more-btn" class="btn secondary">
-          Load More Comments First
+          Expand Comments Only
         </button>
         <button id="diagnose-btn" class="btn ghost">
           Diagnose DOM
@@ -33,7 +33,7 @@
 
     <div id="loading" class="state hidden">
       <div class="spinner"></div>
-      <p class="message">Extracting...</p>
+      <p id="loading-message" class="message">Extracting...</p>
     </div>
 
     <div id="result" class="state hidden">
@@ -44,8 +44,21 @@
 
       <div id="preview" class="preview"></div>
 
+      <label class="picker" for="ai-target">
+        <span>Send to</span>
+        <select id="ai-target">
+          <option value="claude">Claude</option>
+          <option value="chatgpt">ChatGPT</option>
+          <option value="gemini">Gemini</option>
+          <option value="clipboard">Clipboard only</option>
+        </select>
+      </label>
+
       <div class="actions">
-        <button id="copy-btn" class="btn primary">
+        <button id="send-btn" class="btn primary">
+          Send to Claude
+        </button>
+        <button id="copy-btn" class="btn secondary">
           Copy to Clipboard
         </button>
         <button id="copy-json-btn" class="btn secondary">
@@ -56,7 +69,7 @@
         </button>
       </div>
 
-      <p id="copy-feedback" class="feedback hidden">Copied! Paste into Claude Code.</p>
+      <p id="copy-feedback" class="feedback hidden">Copied to clipboard.</p>
     </div>
 
     <div id="error" class="state hidden">

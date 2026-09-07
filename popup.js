@@ -53,10 +53,10 @@
 
     if (mode === "REPLY") {
       lines.push("---");
-      lines.push("**Instructions for Claude:** Draft replies to the comments above. Match my writing style: direct, conversational, technically precise. No generic responses. Each reply should add value or continue the conversation.");
+      lines.push("**Instructions:** Draft replies to the comments above. Match my writing style: direct, conversational, technically precise. No generic responses. Each reply should add value or continue the conversation.");
     } else {
       lines.push("---");
-      lines.push("**Instructions for Claude:** Draft a comment for this post. Match my writing style: direct, conversational, technically precise. Add unique value that nobody in the existing comments has mentioned. Keep it concise (2-4 sentences max).");
+      lines.push("**Instructions:** Draft a comment for this post. Match my writing style: direct, conversational, technically precise. Add unique value that nobody in the existing comments has mentioned. Keep it concise (2-4 sentences max).");
     }
 
     return lines.join("\n");
@@ -76,6 +76,9 @@
   const loadMoreBtn = document.getElementById("load-more-btn");
   const diagnoseBtn = document.getElementById("diagnose-btn");
   const copyBtn = document.getElementById("copy-btn");
+  const sendBtn = document.getElementById("send-btn");
+  const aiTarget = document.getElementById("ai-target");
+  const loadingMessage = document.getElementById("loading-message");
   const copyJsonBtn = document.getElementById("copy-json-btn");
   const reExtractBtn = document.getElementById("re-extract-btn");
   const retryBtn = document.getElementById("retry-btn");
@@ -134,7 +137,7 @@
       // the new post's DOM, so a fixed timeout is unreliable.
       // We send a lightweight "ping" that returns the URL the content script
       // sees, and compare it against tab.url.
-      const maxWaitMs = 3000;
+      const maxWaitMs = 5000;
       const pollIntervalMs = 150;
       const startTime = Date.now();
 
@@ -147,12 +150,18 @@
         while (Date.now() - startTime < maxWaitMs) {
           try {
             const ping = await chrome.tabs.sendMessage(tab.id, { action: "ping" });
-            if (ping && ping.ready) break;
+            // Wait for the post AND its comment list. The post shell renders
+            // well before comments hydrate; extracting in that gap returns one comment.
+            if (ping && ping.ready && ping.commentsReady) break;
           } catch (e) {
             // Content script not ready yet, keep polling
           }
           await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
         }
+      }
+
+      if (isSinglePost && loadingMessage) {
+        loadingMessage.textContent = "Loading every comment, then extracting. Up to 15 seconds.";
       }
 
       const response = await chrome.tabs.sendMessage(tab.id, { action: "extract" });
@@ -215,7 +224,10 @@
       const mode = extractedData.mode;
       modeBadge.textContent = `${mode} MODE`;
       modeBadge.className = `badge ${mode.toLowerCase()}`;
-      commentCount.textContent = `${extractedData.comments.length} comments`;
+      const total = extractedData.engagement?.comments || 0;
+      commentCount.textContent = total > extractedData.comments.length
+        ? `${extractedData.comments.length} of ${total} comments`
+        : `${extractedData.comments.length} comments`;
 
       // Build preview
       const postExcerpt = extractedData.post.text
@@ -262,24 +274,25 @@
     if (!tab) return;
 
     try {
+      loadMoreBtn.textContent = "Expanding comments...";
       const response = await chrome.tabs.sendMessage(tab.id, { action: "loadMoreComments" });
       const clicked = response?.clicked || 0;
 
       if (clicked > 0) {
-        loadMoreBtn.textContent = `Loaded! (clicked ${clicked} buttons) - Now Extract`;
+        loadMoreBtn.textContent = `Expanded to ${response.after} comments - Now Extract`;
       } else {
-        loadMoreBtn.textContent = "No 'load more' buttons found";
+        loadMoreBtn.textContent = "Nothing left to expand";
       }
 
       // Reset button text after 2 seconds
       setTimeout(() => {
-        loadMoreBtn.textContent = "Load More Comments First";
+        loadMoreBtn.textContent = "Expand Comments Only";
       }, 2000);
 
     } catch (err) {
       loadMoreBtn.textContent = "Failed - refresh LinkedIn page";
       setTimeout(() => {
-        loadMoreBtn.textContent = "Load More Comments First";
+        loadMoreBtn.textContent = "Expand Comments Only";
       }, 2000);
     }
   };
@@ -343,7 +356,69 @@
   });
 
   copyBtn.addEventListener("click", () => {
+    copyFeedback.textContent = "Copied to clipboard.";
     if (extractedMarkdown) copyToClipboard(extractedMarkdown);
+  });
+
+  // ── Send to the user's AI of choice ──
+  const AI_ORIGINS = {
+    claude: "https://claude.ai/*",
+    chatgpt: "https://chatgpt.com/*",
+    gemini: "https://gemini.google.com/*",
+  };
+  const AI_LABELS = { claude: "Claude", chatgpt: "ChatGPT", gemini: "Gemini", clipboard: "Clipboard" };
+
+  const refreshSendButton = () => {
+    const target = aiTarget.value;
+    sendBtn.disabled = false;
+    sendBtn.textContent = target === "clipboard" ? "Copy to Clipboard" : `Send to ${AI_LABELS[target]}`;
+    copyBtn.classList.toggle("hidden", target === "clipboard");
+  };
+
+  chrome.storage.local.get("riffAiTarget").then(({ riffAiTarget }) => {
+    if (riffAiTarget && AI_LABELS[riffAiTarget]) aiTarget.value = riffAiTarget;
+    refreshSendButton();
+  }).catch(refreshSendButton);
+
+  aiTarget.addEventListener("change", () => {
+    chrome.storage.local.set({ riffAiTarget: aiTarget.value }).catch(() => {});
+    refreshSendButton();
+  });
+
+  sendBtn.addEventListener("click", async () => {
+    if (!extractedMarkdown) return;
+    const target = aiTarget.value;
+    if (target === "clipboard") {
+      copyToClipboard(extractedMarkdown);
+      return;
+    }
+
+    // Permission first, while the click still counts as a user gesture.
+    let granted = false;
+    try {
+      granted = await chrome.permissions.request({ origins: [AI_ORIGINS[target]] });
+    } catch (err) {
+      granted = false;
+    }
+    if (!granted) {
+      copyFeedback.textContent = `Riff needs access to ${AI_LABELS[target]} to paste there. Copied to clipboard instead.`;
+      await copyToClipboard(extractedMarkdown);
+      return;
+    }
+
+    // Clipboard copy is the safety net if the composer cannot be found.
+    try { await navigator.clipboard.writeText(extractedMarkdown); } catch (e) {}
+
+    sendBtn.textContent = `Opening ${AI_LABELS[target]}...`;
+    sendBtn.disabled = true;
+    try {
+      const res = await chrome.runtime.sendMessage({ action: "sendToAI", target, text: extractedMarkdown });
+      if (!res || !res.ok) throw new Error(res?.error || "Unknown error");
+    } catch (err) {
+      refreshSendButton();
+      copyFeedback.textContent = `Could not open ${AI_LABELS[target]}: ${err.message}. Copied to clipboard instead.`;
+      copyFeedback.classList.remove("hidden");
+    }
   });
 
   copyJsonBtn.addEventListener("click", () => {

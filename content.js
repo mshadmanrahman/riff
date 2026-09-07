@@ -1056,6 +1056,126 @@
     return null;
   };
 
+  // ─── Comment expansion (single post pages) ─────────────────
+  // LinkedIn renders one "most relevant" comment on a fresh post page and
+  // hides the rest behind "Load more comments" / "show more replies".
+  // Extraction used to read that one comment and stop. This loop clicks
+  // every expander it can find, waits for the DOM to go quiet, and repeats
+  // until the buttons are gone, the count matches the social bar, or the
+  // time budget runs out.
+
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  const isVisible = (el) => !!el && !el.disabled && el.offsetParent !== null;
+
+  const EXPANDER_TEXT = /load more comments|more comments|previous comments|previous replies|more replies|load previous|show more|see more replies/i;
+
+  const findExpanderButtons = (scope) => {
+    const root = scope || document;
+    const bySelector = Array.from(root.querySelectorAll(SELECTORS.loadMoreComments)).filter(isVisible);
+    const byText = Array.from(root.querySelectorAll("button")).filter(
+      (b) => isVisible(b) && EXPANDER_TEXT.test(b.getAttribute("aria-label") || b.textContent || "")
+    );
+    // Never click the post-level "see more" here; that is handled separately.
+    const seen = new Set();
+    return [...bySelector, ...byText].filter((b) => {
+      if (seen.has(b) || b.matches(SELECTORS.postSeeMore)) return false;
+      seen.add(b);
+      return true;
+    });
+  };
+
+  const countTopLevelComments = (scope) => {
+    const root = scope || document;
+    return Array.from(root.querySelectorAll(SELECTORS.commentItem)).filter(
+      (el) => !el.closest(SELECTORS.replyContainer)
+    ).length;
+  };
+
+  const waitForDomSettle = (target, quietMs = 450, maxMs = 3500) =>
+    new Promise((resolve) => {
+      let quietTimer = null;
+      let finished = false;
+      const observer = new MutationObserver(() => {
+        clearTimeout(quietTimer);
+        quietTimer = setTimeout(done, quietMs);
+      });
+      const done = () => {
+        if (finished) return;
+        finished = true;
+        observer.disconnect();
+        clearTimeout(quietTimer);
+        resolve();
+      };
+      observer.observe(target || document.body, { childList: true, subtree: true });
+      quietTimer = setTimeout(done, quietMs);
+      setTimeout(done, maxMs);
+    });
+
+  const expandComments = async (postEl, targetCount, budgetMs = 12000) => {
+    const started = Date.now();
+    const stats = { rounds: 0, clicks: 0, before: 0, after: 0, elapsedMs: 0, stoppedBy: "" };
+    let scope = postEl && postEl.querySelector(SELECTORS.commentItem) ? postEl : document;
+    stats.before = countTopLevelComments(scope);
+    let staleRounds = 0;
+
+    while (Date.now() - started < budgetMs && stats.rounds < 40) {
+      const count = countTopLevelComments(scope);
+      if (targetCount && count >= targetCount) { stats.stoppedBy = "target reached"; break; }
+
+      let buttons = findExpanderButtons(scope);
+      if (buttons.length === 0 && scope !== document) {
+        scope = document;
+        buttons = findExpanderButtons(scope);
+      }
+
+      if (buttons.length > 0) {
+        for (const btn of buttons.slice(0, 4)) {
+          try { btn.scrollIntoView({ block: "center" }); } catch (e) {}
+          btn.click();
+          stats.clicks++;
+        }
+      } else {
+        // No button yet. LinkedIn also streams comments in while the page
+        // hydrates and lazy-loads more as the list scrolls into view, so
+        // nudge the last comment on screen and give it a moment.
+        const items = scope.querySelectorAll(SELECTORS.commentItem);
+        const last = items[items.length - 1];
+        if (last) { try { last.scrollIntoView({ block: "end" }); } catch (e) {} }
+      }
+      stats.rounds++;
+      await waitForDomSettle(scope === document ? document.body : scope);
+
+      if (countTopLevelComments(scope) > count) {
+        staleRounds = 0;
+        continue;
+      }
+      staleRounds++;
+      if (buttons.length === 0 && staleRounds >= 2) { stats.stoppedBy = "no more buttons"; break; }
+      if (buttons.length > 0 && staleRounds >= 3) { stats.stoppedBy = "no growth"; break; }
+    }
+    if (!stats.stoppedBy) stats.stoppedBy = "budget";
+
+    // Expand truncated comment bodies ("…see more" inside a comment).
+    const inlineMore = Array.from(
+      (scope === document ? document : scope).querySelectorAll(
+        ".comments-comment-item__inline-show-more-text button, .inline-show-more-text__button, button.comments-comment-item__inline-show-more-text"
+      )
+    ).filter(isVisible);
+    for (const btn of inlineMore.slice(0, 200)) btn.click();
+    if (inlineMore.length) await sleep(200);
+
+    try { window.scrollTo({ top: 0 }); } catch (e) {}
+    stats.after = countTopLevelComments(scope);
+    stats.elapsedMs = Date.now() - started;
+    return stats;
+  };
+
+  const resolveSinglePostEl = () => {
+    const urn = extractUrnFromUrl();
+    return (urn && findPostByUrn(urn)) || findOverlayPost() || document.querySelector(SELECTORS.singlePost) || null;
+  };
+
   const extractPost = () => {
     let postEl = null;
     let isFeedPage = false;
@@ -1317,10 +1437,10 @@
 
     if (mode === "REPLY") {
       lines.push("---");
-      lines.push("**Instructions for Claude:** Draft replies to the comments above. Match my writing style: direct, conversational, technically precise. No generic responses. Each reply should add value or continue the conversation.");
+      lines.push("**Instructions:** Draft replies to the comments above. Match my writing style: direct, conversational, technically precise. No generic responses. Each reply should add value or continue the conversation.");
     } else {
       lines.push("---");
-      lines.push("**Instructions for Claude:** Draft a comment for this post. Match my writing style: direct, conversational, technically precise. Add unique value that nobody in the existing comments has mentioned. Keep it concise (2-4 sentences max).");
+      lines.push("**Instructions:** Draft a comment for this post. Match my writing style: direct, conversational, technically precise. Add unique value that nobody in the existing comments has mentioned. Keep it concise (2-4 sentences max).");
     }
 
     return lines.join("\n");
@@ -1346,7 +1466,13 @@
       if (urn) {
         // Single post page: ready when we can find the post by URN or in an overlay
         const found = findPostByUrn(urn) || findOverlayPost();
-        sendResponse({ ready: !!found, url: window.location.href });
+        // The post container appears long before its comment list hydrates.
+        // Report both so the popup can wait for the comments, not just the shell.
+        const commentsReady = !!(
+          document.querySelector(SELECTORS.commentsSection) ||
+          document.querySelector(SELECTORS.commentItem)
+        );
+        sendResponse({ ready: !!found, commentsReady, url: window.location.href });
       } else {
         // Feed page or non-post page: always ready
         sendResponse({ ready: true, url: window.location.href });
@@ -1354,9 +1480,23 @@
       return true;
     }
     if (request.action === "extract") {
-      const data = extractPost();
-      const markdown = formatAsMarkdown(data);
-      sendResponse({ data, markdown });
+      (async () => {
+        let expansion = null;
+        try {
+          if (extractUrnFromUrl() || window.location.pathname.includes("/posts/")) {
+            const postEl = resolveSinglePostEl();
+            const target = postEl ? getEngagementCount(postEl, SELECTORS.commentCount) : 0;
+            expansion = await expandComments(postEl, target, request.expandBudgetMs || 12000);
+          }
+        } catch (e) {
+          expansion = { error: String(e && e.message || e) };
+        }
+        const data = extractPost();
+        if (data && data._debug) data._debug.expansion = expansion;
+        const markdown = formatAsMarkdown(data);
+        sendResponse({ data, markdown });
+      })();
+      return true;
     }
     if (request.action === "diagnose") {
       // ── Enhanced diagnostic: captures feed structure in detail ──
@@ -1423,20 +1563,13 @@
       sendResponse({ report });
     }
     if (request.action === "loadMoreComments") {
-      // Try standard selectors first, then generic feed buttons
-      let buttons = document.querySelectorAll(SELECTORS.loadMoreComments);
-      let clicked = 0;
-
-      if (buttons.length === 0) {
-        // Feed fallback: look for buttons with "load" or "more" in aria-label
-        buttons = document.querySelectorAll('button[aria-label*="oad more"], button[aria-label*="previous"], button[aria-label*="more comment"]');
-      }
-
-      for (const btn of buttons) {
-        btn.click();
-        clicked++;
-      }
-      sendResponse({ clicked });
+      (async () => {
+        const postEl = resolveSinglePostEl();
+        const target = postEl ? getEngagementCount(postEl, SELECTORS.commentCount) : 0;
+        const stats = await expandComments(postEl, target, request.expandBudgetMs || 12000);
+        sendResponse({ clicked: stats.clicks, ...stats });
+      })();
+      return true;
     }
     return true;
   });

@@ -32,7 +32,7 @@
   <img src="riff-demo.gif" alt="Riff Demo" width="720">
 </p>
 
-**Riff** is a Chrome extension that extracts LinkedIn posts and comments into clean, structured markdown. One click. Copy to clipboard. Paste into any AI tool to draft thoughtful replies that actually reference what people said.
+**Riff** is a Chrome extension that extracts a LinkedIn post and every one of its comments into clean, structured markdown, then hands it to Claude, ChatGPT or Gemini with the message box already filled. One click on LinkedIn, one press of Enter in your AI. Or copy to clipboard and paste wherever you like.
 
 The best LinkedIn comments add unique value. But with 30+ comments on every post, most people either skip reading them or end up saying what someone already said. Riff gives you the full conversation context so your reply stands out.
 
@@ -58,17 +58,7 @@ Open [linkedin.com](https://www.linkedin.com) and find a post you want to engage
 - **A single post page** (click into a specific post)
 - **Your own posts** (to reply to comments)
 
-### Step 3: Expand Comments (Important!)
-
-**Before extracting, make sure comments are visible on the page:**
-
-1. Click the **"Comments"** section on the post to expand it
-2. If you see a **"Load more comments"** button, click it a few times
-3. The more comments visible on screen, the more Riff can extract
-
-> **Why?** LinkedIn doesn't load comments until you open them. Riff reads what's on screen, not what's hidden. If you see "0 comments extracted" but the post has comments, this is why.
-
-### Step 4: Click Riff
+### Step 3: Click Riff
 
 Click the **Riff icon** (purple speech bubble with music notes) in your Chrome toolbar.
 
@@ -76,26 +66,23 @@ You'll see a popup with a big button:
 
 **➡️ Click "Extract Post + Comments"**
 
-Riff will scan the post and show you:
+On a post page Riff expands the comment thread for you: it clicks "Load more comments" and "load previous replies" until the count matches the post's comment counter, then reads everything. Up to about 15 seconds on a busy post. It then shows you:
 - A **mode badge** (COMMENT or REPLY)
-- How many comments were found
+- How many comments were found, against the total the post reports
 - A preview of the extracted content
 
-### Step 5: Copy and Paste
+### Step 4: Send to your AI
 
-1. Click **"Copy Markdown"** (copies structured text to your clipboard)
-2. Open your AI tool of choice:
-   - [Claude](https://claude.ai) (recommended)
-   - [ChatGPT](https://chatgpt.com)
-   - Any AI that accepts text input
-3. **Paste** (Ctrl+V / Cmd+V)
-4. The AI now has the full context: post, author, all comments, timestamps
-5. Ask it to draft your reply or comment
+1. Pick **Claude**, **ChatGPT**, **Gemini** or **Clipboard only** in the "Send to" dropdown. Riff remembers your choice.
+2. Click **"Send to Claude"** (or whichever you picked).
+3. The first time, Chrome asks whether Riff may access that site. Say yes. Riff needs it to type into the message box, nothing else.
+4. Riff opens the AI in a new tab, pastes the post and comments into the message box, and stops. You read it over and press Enter.
+5. If the message box cannot be found, the text is already on your clipboard as a fallback.
 
 ### That's it! Your workflow:
 
 ```
-See interesting post → Expand comments → Click Riff → Extract → Copy → Paste into AI → Post your reply
+See interesting post → Click Riff → Extract → Send to AI → Press Enter → Post your reply
 ```
 
 ### Troubleshooting
@@ -103,7 +90,8 @@ See interesting post → Expand comments → Click Riff → Extract → Copy →
 | Problem | Fix |
 |---------|-----|
 | "No LinkedIn post found" | Make sure you're on linkedin.com |
-| "0 comments extracted" | Click to expand comments on the post first, then re-extract |
+| Fewer comments than the post reports | Click "Re-extract"; LinkedIn sometimes loads the thread slowly. On the feed page Riff reads what is visible, so open the post first |
+| "Send to Claude" copied to clipboard instead | Chrome's permission prompt was declined, or the AI's message box has changed. Paste with Cmd+V / Ctrl+V and open an issue |
 | Wrong post extracted | Scroll so the post you want is centered on screen, then try again |
 | Extension not responding | Refresh the LinkedIn page (Cmd+R / Ctrl+R) and try again |
 | "Receiving end does not exist" | Refresh the LinkedIn page |
@@ -134,9 +122,13 @@ Riff detects the mode automatically. No configuration needed.
 ### Works Everywhere on LinkedIn
 
 - **Feed page**: Extracts the post closest to the center of your screen
-- **Single post pages**: Full extraction with all comments
+- **Single post pages**: Full extraction with all comments, expanded automatically
 - **Reposts**: Shows original author + repost attribution
 - **Video posts**: Extracts text without video player UI contamination
+
+### Send to your AI
+
+Pick Claude, ChatGPT or Gemini once. From then on one click opens the AI with the full thread already in the message box. Riff never sends anything itself: you read it and press Enter. Nothing goes to any server other than the AI you chose to open.
 
 ---
 
@@ -200,8 +192,8 @@ The AI instructions at the bottom are pre-written so you can paste and get a dra
 - All processing happens locally in your browser
 - No data is sent to any server
 - No analytics, no tracking, no cookies
-- Content only exists in your clipboard after you copy it
-- No background processes or persistent storage
+- Content only exists in your clipboard, or in the AI tab you asked Riff to open
+- The only stored setting is which AI you picked in the dropdown
 - **Open source**: You can read every line of code
 
 [Full privacy policy](PRIVACY.md)
@@ -212,8 +204,10 @@ The AI instructions at the bottom are pre-written so you can paste and get a dra
 |-----------|-----|
 | `activeTab` | Read the current LinkedIn page when you click the icon |
 | `clipboardWrite` | Copy extracted content to your clipboard |
-| `scripting` | Inject the extraction script into LinkedIn tabs |
-| `host_permissions` | Only works on `linkedin.com` |
+| `scripting` | Inject the extraction script into LinkedIn tabs, and the paste script into the AI tab you chose |
+| `storage` | Remember which AI you picked |
+| `host_permissions` | Always on for `linkedin.com` only |
+| optional `claude.ai`, `chatgpt.com`, `gemini.google.com` | Asked for on first use of "Send to", one site at a time, so Riff can fill the message box there |
 
 ---
 
@@ -223,8 +217,10 @@ The AI instructions at the bottom are pre-written so you can paste and get a dra
 riff/
 ├── manifest.json          # MV3 extension config
 ├── content.js             # DOM scraper (dual extraction paths)
-│   ├── Single post path   # Class-based selectors (.feed-shared-update-v2)
+│   ├── Single post path   # Class-based selectors, expands the comment thread first
 │   └── Feed page path     # Semantic selectors (role, aria-label, data-testid)
+├── background.js          # Opens the AI tab and injects the filler once it has loaded
+├── ai-fill.js             # Finds the composer on claude.ai / chatgpt.com / gemini and pastes
 ├── popup.html/js/css      # Dark theme popup UI
 ├── content-styles.css     # Injected page styles
 └── icons/                 # Custom SVG + PNG at 16/48/128px
