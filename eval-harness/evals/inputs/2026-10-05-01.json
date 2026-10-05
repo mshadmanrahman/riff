@@ -1,0 +1,23 @@
+{
+  "mode": "REPLY",
+  "extractedAt": "2026-10-05",
+  "source": "pasted in chat, not Riff extension",
+  "post": {
+    "author": "Shadman Rahman",
+    "type": "text",
+    "url": "https://www.linkedin.com/feed/update/urn:li:activity:7512775796521115649/",
+    "text": "In June, a script read my meeting notes and told me I wasn't giving people credit. (Granola meeting-coach post: six self-chosen habits, verbatim quotes, weekly read, patterns across rooms.)"
+  },
+  "comments": [
+    {
+      "author": "Chetna Samant",
+      "headline": "Search & Personalization Product Leader | AI-native Discovery, Search & Recommendations | Ex-Unity, Klarna, Snoonu, Intuit",
+      "timestamp": "53m",
+      "text": "I did this but with Claude scheduler agent, created a coach-me that served me with top-5 advises for the week, and liked it! \nHowever, over time, I dialled it back heavily. \n\nIt now serves me with only limited-scope speech patterns that I should avoid - speaking verbose and delaying impact kind of stuff.\nThe pitfalls of coach-me AI are like the pitfalls of a lot of other AI - they are not “human” - they don’t understand the loaded  human context, motivations, goals- they miss and incorrectly advise sometimes, and that is costly over long term."
+    }
+  ],
+  "engagement": {
+    "impressions": 83,
+    "comments": 2
+  }
+}
