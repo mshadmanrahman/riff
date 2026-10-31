@@ -1,0 +1,30 @@
+Riff loads every comment and reply on a LinkedIn post and turns the thread into clean text you can hand to Claude, ChatGPT or Gemini. You ask the question. Riff only reads: it never posts, likes or comments.
+
+Why it matters
+Copy a busy LinkedIn post into an AI and it gets a fraction of the thread. In one test, a post with 60 comments reached Claude as 4 comments, plus buttons, reaction counts and sidebar text. Whatever the AI tells you is based on that sample.
+
+How it works
+1. Open a LinkedIn post, on its own page or in your feed.
+2. Click the Riff icon.
+3. Click "Get post + every comment". Riff expands the thread for you, which can take up to 15 seconds.
+4. Pick Claude, ChatGPT, Gemini or Clipboard only, then click Send.
+5. The AI tab opens with the thread already in the message box. Add your question and press Enter.
+
+Questions to try
+- What objections keep coming up?
+- Who disagrees with the post, and why?
+- Which comments come from people who have done this themselves?
+
+What you get
+- Post author, headline and the full post text, including the "see more" part
+- Every comment and nested reply, with names, headlines and timestamps
+- A comment count, so you can see how much of the thread loaded
+- Copy as text or as JSON
+
+Privacy
+- No data collection. Everything runs in your browser.
+- No analytics, no tracking, no servers.
+- The text goes only to your clipboard or to the AI tab you choose.
+- Open source: https://github.com/mshadmanrahman/riff
+
+Built for founders, researchers and anyone who reads LinkedIn threads as evidence.
