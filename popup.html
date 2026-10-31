@@ -10,22 +10,22 @@
   <div class="container">
     <header>
       <h1>Riff</h1>
-      <span class="tagline">LinkedIn Engagement Assistant</span>
+      <span class="tagline">The post and every comment, as clean text</span>
     </header>
 
     <div id="not-linkedin" class="state hidden">
-      <p class="message">Navigate to a LinkedIn post to use Riff.</p>
+      <p class="message">Open a LinkedIn post, or scroll one to the middle of your feed. Riff loads every comment for you and hands you clean text, no page junk.</p>
     </div>
 
     <div id="ready" class="state">
       <div class="actions">
         <button id="extract-btn" class="btn primary">
-          Extract Post + Comments
+          Get post + every comment
         </button>
         <button id="load-more-btn" class="btn secondary">
-          Expand Comments Only
+          Just load all comments
         </button>
-        <button id="diagnose-btn" class="btn ghost">
+        <button id="diagnose-btn" class="btn ghost hidden">
           Diagnose DOM
         </button>
       </div>
@@ -38,7 +38,6 @@
 
     <div id="result" class="state hidden">
       <div class="result-header">
-        <span id="mode-badge" class="badge">REPLY MODE</span>
         <span id="comment-count" class="meta"></span>
       </div>
 

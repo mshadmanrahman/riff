@@ -1,4 +1,4 @@
-# Privacy Policy for Riff - LinkedIn Engagement Assistant
+# Privacy Policy for Riff - Read the Whole LinkedIn Thread
 
 **Last updated:** September 7, 2026
 

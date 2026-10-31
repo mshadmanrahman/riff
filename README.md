@@ -9,11 +9,11 @@
 </p>
 
 <p align="center">
-  <strong>Read the room before you comment.</strong>
+  <strong>The whole thread, not LinkedIn's sample.</strong>
 </p>
 
 <p align="center">
-  <a href="https://chromewebstore.google.com/detail/riff-linkedin-engagement/hbbgiicapcnfcamdpinhkgkjljpnfffn"><img src="https://img.shields.io/badge/Chrome%20Web%20Store-Install-6366F1?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Chrome Web Store"></a>
+  <a href="https://chromewebstore.google.com/detail/riff-linkedin-engagement/hbbgiicapcnfcamdpinhkgkjljpnfffn"><img src="https://img.shields.io/badge/Chrome%20Web%20Store-Install-C2410C?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Chrome Web Store"></a>
   <a href="https://youtu.be/FrJWA9N00C4"><img src="https://img.shields.io/badge/Watch%20Demo-YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="YouTube Demo"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-10B981?style=for-the-badge" alt="MIT License"></a>
 </p>
@@ -32,9 +32,9 @@
   <img src="riff-demo.gif" alt="Riff Demo" width="720">
 </p>
 
-**Riff** is a Chrome extension that extracts a LinkedIn post and every one of its comments into clean, structured markdown, then hands it to Claude, ChatGPT or Gemini with the message box already filled. One click on LinkedIn, one press of Enter in your AI. Or copy to clipboard and paste wherever you like.
+LinkedIn shows you a sample of the comments. The default view picks the "most relevant" ones, the rest load ten at a time, replies hide behind their own buttons, and you click "Load more" until your finger hurts. So most people give up and copy-paste the whole page into Claude, and the AI gets the nav bar, the ads, "Promoted", "1st", "Like · Reply" and half a sidebar along with the comments it actually needs.
 
-The best LinkedIn comments add unique value. But with 30+ comments on every post, most people either skip reading them or end up saying what someone already said. Riff gives you the full conversation context so your reply stands out.
+**Riff** fixes that with one click. It loads every comment and reply on the post, strips the page junk, and gives you the post plus the full thread as clean markdown. Send it to Claude, ChatGPT or Gemini with the message box already filled, or copy it and paste wherever you like. Then ask your AI whatever you want to know about the conversation.
 
 ---
 
@@ -43,7 +43,7 @@ The best LinkedIn comments add unique value. But with 30+ comments on every post
 ### Step 1: Install Riff
 
 <a href="https://chromewebstore.google.com/detail/riff-linkedin-engagement/hbbgiicapcnfcamdpinhkgkjljpnfffn">
-  <img src="https://img.shields.io/badge/Get%20Riff-Chrome%20Web%20Store-6366F1?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Install from Chrome Web Store">
+  <img src="https://img.shields.io/badge/Get%20Riff-Chrome%20Web%20Store-C2410C?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Install from Chrome Web Store">
 </a>
 
 Click the link above, then click **"Add to Chrome"**. That's it.
@@ -52,22 +52,21 @@ Click the link above, then click **"Add to Chrome"**. That's it.
 
 ### Step 2: Go to LinkedIn
 
-Open [linkedin.com](https://www.linkedin.com) and find a post you want to engage with. This works on:
+Open [linkedin.com](https://www.linkedin.com) and find a post you want to understand. This works on:
 
 - **Your feed** (scroll to any post)
 - **A single post page** (click into a specific post)
-- **Your own posts** (to reply to comments)
+- **Your own posts** (to see everything people said)
 
 ### Step 3: Click Riff
 
-Click the **Riff icon** (purple speech bubble with music notes) in your Chrome toolbar.
+Click the **Riff icon** (a blue block letter R) in your Chrome toolbar.
 
 You'll see a popup with a big button:
 
-**➡️ Click "Extract Post + Comments"**
+**➡️ Click "Get post + every comment"**
 
 On a post page Riff expands the comment thread for you: it clicks "Load more comments" and "load previous replies" until the count matches the post's comment counter, then reads everything. Up to about 15 seconds on a busy post. It then shows you:
-- A **mode badge** (COMMENT or REPLY)
 - How many comments were found, against the total the post reports
 - A preview of the extracted content
 
@@ -76,13 +75,13 @@ On a post page Riff expands the comment thread for you: it clicks "Load more com
 1. Pick **Claude**, **ChatGPT**, **Gemini** or **Clipboard only** in the "Send to" dropdown. Riff remembers your choice.
 2. Click **"Send to Claude"** (or whichever you picked).
 3. The first time, Chrome asks whether Riff may access that site. Say yes. Riff needs it to type into the message box, nothing else.
-4. Riff opens the AI in a new tab, pastes the post and comments into the message box, and stops. You read it over and press Enter.
+4. Riff opens the AI in a new tab, pastes the post and comments into the message box, and stops. You type your question under it and press Enter.
 5. If the message box cannot be found, the text is already on your clipboard as a fallback.
 
 ### That's it! Your workflow:
 
 ```
-See interesting post → Click Riff → Extract → Send to AI → Press Enter → Post your reply
+See interesting post → Click Riff → Extract → Send to AI → Ask your question
 ```
 
 ### Troubleshooting
@@ -100,14 +99,15 @@ See interesting post → Click Riff → Extract → Send to AI → Press Enter �
 
 ## ✨ Features
 
-### Two Modes (Automatic)
+### Ask It Anything
 
-| Mode | When | What It Does |
-|------|------|-------------|
-| **COMMENT** | On someone else's post | Extracts post + comments so you can draft a comment that adds unique value |
-| **REPLY** | On your own post | Extracts all comments so you can draft replies to each one |
+Riff hands your AI the full conversation and adds no instructions of its own. You bring the question:
 
-Riff detects the mode automatically. No configuration needed.
+- What objections keep coming up, and who raised them?
+- Where do the replies disagree with the post?
+- Which questions did nobody answer?
+
+Riff never writes a comment for you.
 
 ### What Gets Extracted
 
@@ -122,7 +122,7 @@ Riff detects the mode automatically. No configuration needed.
 ### Works Everywhere on LinkedIn
 
 - **Feed page**: Extracts the post closest to the center of your screen
-- **Single post pages**: Full extraction with all comments, expanded automatically
+- **Single post pages**: Full extraction with all comments, expanded for you
 - **Reposts**: Shows original author + repost attribution
 - **Video posts**: Extracts text without video player UI contamination
 
@@ -137,7 +137,7 @@ Pick Claude, ChatGPT or Gemini once. From then on one click opens the AI with th
 ### Chrome Web Store (Recommended)
 
 <a href="https://chromewebstore.google.com/detail/riff-linkedin-engagement/hbbgiicapcnfcamdpinhkgkjljpnfffn">
-  <img src="https://img.shields.io/badge/Get%20Riff-Chrome%20Web%20Store-6366F1?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Install from Chrome Web Store">
+  <img src="https://img.shields.io/badge/Get%20Riff-Chrome%20Web%20Store-C2410C?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Install from Chrome Web Store">
 </a>
 
 ### Manual Install (Developer Mode)
@@ -160,7 +160,7 @@ Works in any Chromium-based browser: Chrome, Edge, Brave, Arc, Vivaldi, Opera.
 Riff copies structured markdown to your clipboard:
 
 ```markdown
-## LinkedIn Post [COMMENT MODE]
+## LinkedIn Post
 **Author:** Felix Haas | CEO at Lovable
 **Type:** image | **Engagement:** 142 likes, 29 comments
 **URL:** https://www.linkedin.com/feed/update/...
@@ -171,17 +171,14 @@ Riff copies structured markdown to your clipboard:
 Hot take: marketers are more technical than they think.
 They know exactly what they want to build...
 
-### Comments (29 extracted)
+### Comments (29 extracted: 22 comments, 7 replies)
 1. **@JJ Englert** - Growing the #1 AI Builder Community (2 likes)
    > Thanks for sharing! The skillset that marketers needed...
 2. **@Sarah** - CEO, Acme Labs
    > Seeing this in our hiring pipeline already...
-
----
-**Instructions for Claude:** Draft a comment for this post...
 ```
 
-The AI instructions at the bottom are pre-written so you can paste and get a draft immediately.
+There are no instructions at the bottom. Type your own question under the thread before you press Enter.
 
 ---
 
@@ -216,17 +213,17 @@ The AI instructions at the bottom are pre-written so you can paste and get a dra
 ```
 riff/
 ├── manifest.json          # MV3 extension config
-├── content.js             # DOM scraper (dual extraction paths)
+├── content.js             # Thread reader (dual extraction paths)
 │   ├── Single post path   # Class-based selectors, expands the comment thread first
 │   └── Feed page path     # Semantic selectors (role, aria-label, data-testid)
 ├── background.js          # Opens the AI tab and injects the filler once it has loaded
 ├── ai-fill.js             # Finds the composer on claude.ai / chatgpt.com / gemini and pastes
 ├── popup.html/js/css      # Dark theme popup UI
 ├── content-styles.css     # Injected page styles
-└── icons/                 # Custom SVG + PNG at 16/48/128px
+└── icons/                 # Custom SVG + PNG at 16/32/48/128px
 ```
 
-### How It Handles LinkedIn's Anti-Scraping
+### How It Keeps Working When LinkedIn Changes
 
 LinkedIn uses **hashed CSS classes** on the feed page that change with every deploy. Riff uses two extraction strategies:
 
@@ -245,7 +242,7 @@ Contributions welcome! LinkedIn changes their DOM frequently, so selector update
 - Selector updates when LinkedIn changes their DOM
 - New extraction strategies for edge cases
 - UI improvements to the popup
-- Bug reports with diagnostic output (click **"Diagnose DOM"** in the popup)
+- Bug reports with the post URL and how many comments Riff got against the count LinkedIn shows
 
 ```bash
 # Development workflow

@@ -12,19 +12,18 @@
 
   const formatDataAsMarkdown = (data) => {
     const lines = [];
-    const mode = data.mode;
-
-    lines.push(`## LinkedIn Post [${mode} MODE]`);
+    lines.push("## LinkedIn Post");
     lines.push(`**Author:** ${data.post.author}${data.post.headline ? ` | ${data.post.headline}` : ""}`);
     lines.push(`**Type:** ${data.post.type} | **Engagement:** ${data.engagement.likes} likes, ${data.engagement.comments} comments`);
-    lines.push(`**URL:** ${data.post.url}`);
+    lines.push(`**URL:** ${data.post.url || "(not shown on the feed for posts without comments; open the post for its link)"}`);
     lines.push("");
     lines.push("### Post Content");
     lines.push(data.post.text || "(Could not extract post text)");
     lines.push("");
 
     if (data.comments.length > 0) {
-      lines.push(`### Comments (${data.comments.length} extracted)`);
+      const replyCount = data.comments.reduce((n, c) => n + c.replies.length, 0);
+      lines.push(`### Comments (${data.comments.length + replyCount} extracted: ${data.comments.length} comments, ${replyCount} replies)`);
       data.comments.forEach((comment, i) => {
         const likesStr = comment.likes > 0 ? ` (${comment.likes} likes)` : "";
         lines.push(`${i + 1}. **@${comment.author}**${comment.headline ? ` - ${comment.headline}` : ""}${likesStr}`);
@@ -46,14 +45,6 @@
         lines.push("No comments found. Try clicking 'Load more comments' on the post first.");
       }
       lines.push("");
-    }
-
-    if (mode === "REPLY") {
-      lines.push("---");
-      lines.push("**Instructions:** Draft replies to the comments above. Match my writing style: direct, conversational, technically precise. No generic responses. Each reply should add value or continue the conversation.");
-    } else {
-      lines.push("---");
-      lines.push("**Instructions:** Draft a comment for this post. Match my writing style: direct, conversational, technically precise. Add unique value that nobody in the existing comments has mentioned. Keep it concise (2-4 sentences max).");
     }
 
     return lines.join("\n");
@@ -79,7 +70,6 @@
   const copyJsonBtn = document.getElementById("copy-json-btn");
   const reExtractBtn = document.getElementById("re-extract-btn");
   const retryBtn = document.getElementById("retry-btn");
-  const modeBadge = document.getElementById("mode-badge");
   const commentCount = document.getElementById("comment-count");
   const preview = document.getElementById("preview");
   const copyFeedback = document.getElementById("copy-feedback");
@@ -218,13 +208,12 @@
       extractedMarkdown = formatDataAsMarkdown(extractedData);
 
       // Update UI
-      const mode = extractedData.mode;
-      modeBadge.textContent = `${mode} MODE`;
-      modeBadge.className = `badge ${mode.toLowerCase()}`;
       const total = extractedData.engagement?.comments || 0;
-      commentCount.textContent = total > extractedData.comments.length
-        ? `${extractedData.comments.length} of ${total} comments`
-        : `${extractedData.comments.length} comments`;
+      const got = extractedData.comments.length +
+        extractedData.comments.reduce((n, c) => n + c.replies.length, 0);
+      commentCount.textContent = total > got
+        ? `${got} of ${total} comments`
+        : `${got} comments`;
 
       // Build preview
       const postExcerpt = extractedData.post.text
@@ -249,7 +238,7 @@
       }
 
       if (extractedData.comments.length > 3) {
-        previewHtml += `<div class="comment-preview" style="color:#525252">+${extractedData.comments.length - 3} more...</div>`;
+        previewHtml += `<div class="comment-preview more">+${extractedData.comments.length - 3} more...</div>`;
       }
 
       preview.innerHTML = previewHtml;
@@ -271,7 +260,7 @@
     if (!tab) return;
 
     try {
-      loadMoreBtn.textContent = "Expanding comments...";
+      loadMoreBtn.textContent = "Loading comments...";
       const response = await chrome.tabs.sendMessage(tab.id, { action: "loadMoreComments" });
       const clicked = response?.clicked || 0;
 
@@ -283,13 +272,13 @@
 
       // Reset button text after 2 seconds
       setTimeout(() => {
-        loadMoreBtn.textContent = "Expand Comments Only";
+        loadMoreBtn.textContent = "Just load all comments";
       }, 2000);
 
     } catch (err) {
       loadMoreBtn.textContent = "Failed - refresh LinkedIn page";
       setTimeout(() => {
-        loadMoreBtn.textContent = "Expand Comments Only";
+        loadMoreBtn.textContent = "Just load all comments";
       }, 2000);
     }
   };

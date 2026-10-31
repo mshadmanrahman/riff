@@ -1,25 +1,29 @@
 # Chrome Web Store Listing
 
 ## Short Description (132 chars max)
-Extract LinkedIn posts and all their comments, then send them straight to Claude, ChatGPT or Gemini to draft your reply.
+The whole thread, not LinkedIn's sample. One click loads every comment on the post you're viewing, as clean text for your AI.
 
 ## Detailed Description
 
-Riff extracts a LinkedIn post and every one of its comments into clean, structured markdown, then opens Claude, ChatGPT or Gemini with the message box already filled. You read it and press Enter.
+LinkedIn shows you a sample of the comments. The default view picks the "most relevant" ones, the rest load ten at a time, and replies hide behind their own buttons. So most people copy-paste the whole page into Claude or ChatGPT, and the AI gets the nav bar, ads, "Promoted" labels and reaction counts mixed in with the comments.
+
+Riff does it in one click. It loads every comment and reply, drops the page junk, and gives you the post plus the full thread as clean markdown. Then it opens Claude, ChatGPT or Gemini with the message box already filled. You add your question and press Enter.
 
 **How it works:**
 
 1. Open any LinkedIn post
 2. Click the Riff icon
-3. Hit "Extract Post + Comments". Riff expands the whole comment thread for you
+3. Hit "Get post + every comment". Riff loads the whole thread for you, replies included
 4. Click "Send to Claude" (or ChatGPT, Gemini, or Clipboard only)
-5. Press Enter in the AI tab
-6. Get a draft reply that matches the conversation context
+5. Type your question under the thread and press Enter
 
-**Two modes:**
+**Ask it anything:**
 
-- REPLY mode: Detected on your own posts. Extracts all comments so you can draft replies.
-- COMMENT mode: Detected on others' posts. Extracts the post and comments so you can draft a comment that adds unique value.
+- What objections keep coming up, and who raised them?
+- Where do the replies disagree with the post?
+- Which questions did nobody answer?
+
+Riff adds no instructions of its own and never writes a comment for you. It gives your AI the full conversation and leaves the question to you.
 
 **What gets extracted:**
 
@@ -41,7 +45,7 @@ Riff extracts a LinkedIn post and every one of its comments into clean, structur
 - Individual post pages
 - Posts with expanded comments
 
-Built for creators, founders, and professionals who want to engage authentically on LinkedIn without spending 30 minutes per comment.
+Built for founders, researchers and anyone who reads a LinkedIn thread to learn what people actually think.
 
 ## Category
 Productivity
@@ -49,11 +53,12 @@ Productivity
 ## Language
 English
 
-## Screenshots needed (1280x800 or 640x400)
-1. Riff popup showing extracted post with COMMENT mode badge
-2. Riff popup showing extracted post with REPLY mode badge and comments
-3. The markdown output pasted into an AI tool
-4. Before/after: LinkedIn post → Riff extraction → AI-drafted comment
+## Store images (in store-assets/)
+1. 01-problem.png: the problem, a whole LinkedIn page pasted into an AI next to Riff's clean output
+2. 02-popup-light.png: the popup after a run, light theme
+3. 03-popup-dark.png: the same popup in dark theme
+4. 04-markdown.png: the clean markdown Riff produces
+5. promo-tile-440x280.png: small promo tile
 
 ## Privacy practices tab (copy each box as written)
 
