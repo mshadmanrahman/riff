@@ -288,6 +288,17 @@
     return closest;
   };
 
+  const safeDecode = (s) => {
+    try { return decodeURIComponent(s); } catch (e) { return s; }
+  };
+
+  // The whole feed is itself a LazyColumn, so only a LazyColumn inside the
+  // post (its comment list) marks a link as belonging to a comment.
+  const inPostComments = (el, postEl) => {
+    const list = el.closest('[data-component-type="LazyColumn"]');
+    return !!list && list !== postEl && postEl.contains(list);
+  };
+
   const extractFeedPostAuthor = (postEl) => {
     let name = "";
     let headline = "";
@@ -305,8 +316,8 @@
     if (!name) {
       const profileLinks = postEl.querySelectorAll('a[href*="/in/"]');
       for (const link of profileLinks) {
-        if (link.closest('[data-component-type="LazyColumn"]')) continue;
-        const text = cleanText(link.textContent);
+        if (inPostComments(link, postEl)) continue;
+        const text = cleanText(link.textContent).replace(/\s*[•·]\s*(1st|2nd|3rd\+?|following|follow)$/i, "");
         if (text.length > 2 && text.length < 50 && !/follow|connect|view|verified/i.test(text)) {
           name = text;
           break;
@@ -318,7 +329,7 @@
     if (!name) {
       const links = postEl.querySelectorAll('a[aria-label]');
       for (const link of links) {
-        if (link.closest('[data-component-type="LazyColumn"]')) continue;
+        if (inPostComments(link, postEl)) continue;
         const label = link.getAttribute("aria-label") || "";
         const match = label.match(/(?:View\s+)?(.+?)'s\s+(?:profile|graphic)/i);
         if (match) {
@@ -345,11 +356,25 @@
       }
     }
 
+    // Strategy 4b: Company or showcase page posts have no /in/ links at all,
+    // so the strategies below would fall through to the viewer's own name.
+    if (!name) {
+      const orgLinks = postEl.querySelectorAll('a[href*="/company/"], a[href*="/showcase/"]');
+      for (const link of orgLinks) {
+        if (inPostComments(link, postEl)) continue;
+        const text = cleanText(link.textContent);
+        if (text.length > 1 && text.length < 80 && !/follow|followers|view/i.test(text)) {
+          name = text;
+          break;
+        }
+      }
+    }
+
     // Strategy 5: For own posts (no Follow button), extract from the first
     // profile link's href: /in/username → look for nearby visible text
     if (!name) {
       const firstProfileLink = postEl.querySelector('a[href*="/in/"]');
-      if (firstProfileLink && !firstProfileLink.closest('[data-component-type="LazyColumn"]')) {
+      if (firstProfileLink && !inPostComments(firstProfileLink, postEl)) {
         // The link might wrap an image (no text) but nearby siblings have the name
         let sibling = firstProfileLink.nextElementSibling;
         for (let i = 0; i < 3 && sibling; i++) {
@@ -377,11 +402,11 @@
     // /in/shadman-rahman-abc123 → "Shadman Rahman"
     if (!name) {
       const anyProfileLink = postEl.querySelector('a[href*="/in/"]');
-      if (anyProfileLink && !anyProfileLink.closest('[data-component-type="LazyColumn"]')) {
+      if (anyProfileLink && !inPostComments(anyProfileLink, postEl)) {
         const href = anyProfileLink.getAttribute("href") || "";
         const slugMatch = href.match(/\/in\/([^/?]+)/);
         if (slugMatch) {
-          const slug = slugMatch[1]
+          const slug = safeDecode(slugMatch[1])
             .replace(/-[a-f0-9]{6,}$/i, "")
             .replace(/-\d{5,}$/, "")
             .replace(/-[a-z0-9]{8,}$/i, "");
@@ -408,7 +433,7 @@
             const href = sidebarLink.getAttribute("href") || "";
             const slugMatch = href.match(/\/in\/([^/?]+)/);
             if (slugMatch) {
-              const slug = slugMatch[1]
+              const slug = safeDecode(slugMatch[1])
                 .replace(/-[a-f0-9]{6,}$/i, "")
                 .replace(/-\d{5,}$/, "")
                 .replace(/-[a-z0-9]{8,}$/i, "");
@@ -1178,6 +1203,168 @@
     return stats;
   };
 
+  // ─── New layout (server-driven UI, hashed classes) ──────────
+  // Since October 2026 both the feed and post pages render comments as
+  // flat siblings with ids like "replaceableComment_urn:li:comment:(activity:N,N)".
+  // Replies are siblings too; only a 40px indent on the avatar link marks them.
+
+  const SDUI_COMMENT = '[id^="replaceableComment_urn:li:comment:"]';
+  const SDUI_LOAD_MORE = /^(see|load|show|view)\s+(\d+\s+)?(more|previous|earlier)\s+(comments?|replies|reply)\b/i;
+  const SDUI_TIMESTAMP = /^\d+(s|m|h|d|w|mo|y)$/;
+  const SDUI_JUNK = /^(follow|following|author|reply|like|\d+|[•·]\s*(1st|2nd|3rd\+?)|premium|verified|verified profile|open reactions menu|edited|[\d,.]+\s*[km]?\s+followers?)$/i;
+
+  const sduiScopeForPage = () => {
+    if (extractUrnFromUrl() || window.location.pathname.includes("/posts/")) {
+      return document.querySelector("main") || document.body;
+    }
+    return findClosestToViewportCenter(findFeedPosts());
+  };
+
+  const sduiCommentCount = (scope) => {
+    if (!scope) return 0;
+    const btn = scope.querySelector('button[aria-label="Comment"]');
+    if (!btn) return 0;
+    return parseInt((btn.textContent || "").replace(/[​,\s]/g, ""), 10) || 0;
+  };
+
+  const sduiBlocks = (scope) => {
+    const seen = new Set();
+    return Array.from((scope || document).querySelectorAll(SDUI_COMMENT)).filter((el) => {
+      if (seen.has(el.id)) return false;
+      seen.add(el.id);
+      return true;
+    });
+  };
+
+  const sduiLoadMoreButtons = (scope) =>
+    Array.from(scope.querySelectorAll('button, div[role="button"]')).filter(
+      (b) => isVisible(b) && SDUI_LOAD_MORE.test(cleanText(b.textContent))
+    );
+
+  const expandSdui = async (scope, targetCount, budgetMs = 12000) => {
+    const started = Date.now();
+    const stats = { layout: "sdui", rounds: 0, clicks: 0, before: 0, after: 0, target: targetCount, elapsedMs: 0, stoppedBy: "" };
+    if (!scope) { stats.stoppedBy = "no post"; return stats; }
+    stats.before = sduiBlocks(scope).length;
+
+    // Feed cards start with comments closed; the Comment button opens them.
+    if (stats.before === 0 && !scope.querySelector('[data-component-type="LazyColumn"]')) {
+      const btn = scope.querySelector('button[aria-label="Comment"]');
+      if (btn && scope !== document.querySelector("main")) {
+        btn.click();
+        stats.clicks++;
+        await waitForDomSettle(scope, 600, 3000);
+      }
+    }
+
+    // "Most relevant" hides comments for good (30 of 53 on the test post).
+    // LinkedIn's own label for "Most recent" is "See all comments".
+    const sortBtn = Array.from(scope.querySelectorAll('button, div[role="button"]')).find(
+      (b) => isVisible(b) && /^most relevant$/i.test(cleanText(b.textContent))
+    );
+    if (sortBtn) {
+      sortBtn.click();
+      await sleep(400);
+      const recent = Array.from(document.querySelectorAll('[role="menuitem"]')).find((m) =>
+        /^most recent/i.test(cleanText(m.textContent))
+      );
+      if (recent) {
+        recent.click();
+        stats.sortedRecent = true;
+        await waitForDomSettle(scope, 600, 3000);
+      }
+    }
+
+    let staleRounds = 0;
+    while (Date.now() - started < budgetMs && stats.rounds < 40) {
+      const count = sduiBlocks(scope).length;
+      if (targetCount && count >= targetCount) { stats.stoppedBy = "target reached"; break; }
+
+      const buttons = sduiLoadMoreButtons(scope);
+      for (const btn of buttons.slice(0, 4)) {
+        try { btn.scrollIntoView({ block: "center" }); } catch (e) {}
+        btn.click();
+        stats.clicks++;
+      }
+      // Post pages have no button: the list grows as it scrolls into view.
+      // Right after a re-sort the list is empty until its tail is scrolled to.
+      const blocks = sduiBlocks(scope);
+      const lazy = scope.querySelector('[data-component-type="LazyColumn"]');
+      const tail = blocks[blocks.length - 1] || (lazy && lazy.lastElementChild);
+      if (tail) { try { tail.scrollIntoView({ block: "end" }); } catch (e) {} }
+
+      stats.rounds++;
+      await waitForDomSettle(scope, 500, 3000);
+
+      if (sduiBlocks(scope).length > count) { staleRounds = 0; continue; }
+      staleRounds++;
+      if (staleRounds >= 3) { stats.stoppedBy = "no growth"; break; }
+    }
+    if (!stats.stoppedBy) stats.stoppedBy = "budget";
+
+    // Truncated comment bodies end in a "more" button.
+    const inlineMore = Array.from(scope.querySelectorAll(`${SDUI_COMMENT} button`)).filter(
+      (b) => isVisible(b) && /^…?\s*(see\s+)?more$/i.test(cleanText(b.textContent))
+    );
+    for (const btn of inlineMore.slice(0, 200)) btn.click();
+    if (inlineMore.length) await sleep(250);
+
+    stats.after = sduiBlocks(scope).length;
+    stats.elapsedMs = Date.now() - started;
+    return stats;
+  };
+
+  const parseSduiBlock = (block) => {
+    const ownedBy = (el) => el.closest(SDUI_COMMENT) === block;
+    // The first link is the avatar; the name sits in an aria-hidden span
+    // of the second one, followed by the connection degree ("• 3rd+").
+    let author = "";
+    for (const a of Array.from(block.querySelectorAll("a")).filter(ownedBy)) {
+      const span = Array.from(a.querySelectorAll('[aria-hidden="true"]')).find((s) => cleanText(s.textContent));
+      if (span) { author = cleanText(span.textContent).replace(/\s*[•·].*$/, ""); break; }
+    }
+    if (!author) {
+      const opts = block.querySelector('button[aria-label^="View more options for"]');
+      const m = opts && (opts.getAttribute("aria-label") || "").match(/^View more options for (.+?)[’']s? comment\.?$/);
+      if (m) author = m[1];
+    }
+
+    let headline = "";
+    let timestamp = "";
+    for (const p of Array.from(block.querySelectorAll("p")).filter(ownedBy)) {
+      if (p.closest('[data-testid="expandable-text-box"]')) continue;
+      const t = cleanText(p.textContent);
+      if (!t || SDUI_JUNK.test(t) || (author && t.includes(author))) continue;
+      if (SDUI_TIMESTAMP.test(t)) { if (!timestamp) timestamp = t; continue; }
+      // The name line and the headline sit in the second profile link.
+      if (!headline && p.closest("a")) headline = t;
+    }
+
+    const bodyEl = Array.from(block.querySelectorAll('[data-testid="expandable-text-box"]')).find(ownedBy);
+    const text = bodyEl ? (bodyEl.innerText || bodyEl.textContent || "").replace(/…\s*more$/i, "").trim() : "";
+
+    const avatar = block.querySelector("figure");
+    const avatarLink = avatar && avatar.closest("a");
+    const indent = avatarLink ? parseFloat(getComputedStyle(avatarLink).marginLeft) || 0 : 0;
+
+    if (!author && !text) return null;
+    return { author, headline, text, timestamp, likes: 0, replies: [], isReply: indent > 0 };
+  };
+
+  // Flat list in, nested list out: each reply joins the comment above it.
+  const extractSduiComments = (scope) => {
+    const comments = [];
+    for (const block of sduiBlocks(scope)) {
+      const c = parseSduiBlock(block);
+      if (!c) continue;
+      const isReply = c.isReply;
+      delete c.isReply;
+      if (isReply && comments.length) comments[comments.length - 1].replies.push(c);
+      else comments.push(c);
+    }
+    return comments;
+  };
+
   const resolveSinglePostEl = () => {
     const urn = extractUrnFromUrl();
     return (urn && findPostByUrn(urn)) || findOverlayPost() || document.querySelector(SELECTORS.singlePost) || null;
@@ -1426,14 +1613,11 @@
       data.comments.forEach((comment, i) => {
         const likesStr = comment.likes > 0 ? ` (${comment.likes} likes)` : "";
         lines.push(`${i + 1}. **@${comment.author}**${comment.headline ? ` - ${comment.headline}` : ""}${likesStr}`);
-        lines.push(`   > ${comment.text}`);
-        if (comment.timestamp) {
-          lines.push(`   _${comment.timestamp}_`);
-        }
+        lines.push(`   > ${comment.text.replace(/\n+/g, "\n   > ")}`);
         if (comment.replies.length > 0) {
           comment.replies.forEach((reply) => {
             const replyLikes = reply.likes > 0 ? ` (${reply.likes} likes)` : "";
-            lines.push(`   - **@${reply.author}**${replyLikes}: ${reply.text}`);
+            lines.push(`   - **@${reply.author}**${replyLikes}: ${reply.text.replace(/\n+/g, "\n     ")}`);
           });
         }
         lines.push("");
@@ -1479,10 +1663,12 @@
       const urn = extractUrnFromUrl();
       if (urn) {
         // Single post page: ready when we can find the post by URN or in an overlay
-        const found = findPostByUrn(urn) || findOverlayPost();
+        const sdui = !!document.querySelector(`${SDUI_COMMENT}, main button[aria-label="Comment"]`);
+        const found = sdui || findPostByUrn(urn) || findOverlayPost();
         // The post container appears long before its comment list hydrates.
         // Report both so the popup can wait for the comments, not just the shell.
-        const commentsReady = !!(
+        // On the new layout the extract step scrolls comments in itself.
+        const commentsReady = sdui || !!(
           document.querySelector(SELECTORS.commentsSection) ||
           document.querySelector(SELECTORS.commentItem)
         );
@@ -1496,8 +1682,12 @@
     if (request.action === "extract") {
       (async () => {
         let expansion = null;
+        let sduiScope = null;
         try {
-          if (extractUrnFromUrl() || window.location.pathname.includes("/posts/")) {
+          sduiScope = sduiScopeForPage();
+          if (sduiScope && (sduiScope.querySelector(SDUI_COMMENT) || sduiScope.querySelector('button[aria-label="Comment"]'))) {
+            expansion = await expandSdui(sduiScope, sduiCommentCount(sduiScope), request.expandBudgetMs || 12000);
+          } else if (extractUrnFromUrl() || window.location.pathname.includes("/posts/")) {
             const postEl = resolveSinglePostEl();
             const target = postEl ? getEngagementCount(postEl, SELECTORS.commentCount) : 0;
             expansion = await expandComments(postEl, target, request.expandBudgetMs || 12000);
@@ -1505,7 +1695,40 @@
         } catch (e) {
           expansion = { error: String(e && e.message || e) };
         }
-        const data = extractPost();
+        let data = extractPost();
+        if (expansion && expansion.layout === "sdui") {
+          const comments = extractSduiComments(sduiScope);
+          if (data.error && comments.length) {
+            const body = Array.from(sduiScope.querySelectorAll('[data-testid="expandable-text-box"]')).find((el) => !el.closest(SDUI_COMMENT));
+            data = {
+              mode: "COMMENT",
+              post: { author: "", headline: "", text: body ? body.innerText.trim() : "", type: "text", url: window.location.href },
+              engagement: { likes: 0, comments: 0 },
+              extractedAt: new Date().toISOString(),
+              _debug: { strategy: "sdui-fallback" },
+            };
+          }
+          if (!data.error) {
+            // The generic path reads textContent from a detached clone, which
+            // drops paragraph breaks. Read the live body instead, expanded.
+            const findBody = () => Array.from(sduiScope.querySelectorAll('[data-testid="expandable-text-box"]')).find((el) => !el.closest(SDUI_COMMENT));
+            const body = findBody();
+            if (body) {
+              const moreBtn = Array.from(body.querySelectorAll("button")).find((b) => /^…?\s*(see\s+)?more$/i.test(cleanText(b.textContent)));
+              if (moreBtn) {
+                moreBtn.click();
+                await new Promise((r) => setTimeout(r, 600));
+              }
+              const liveText = (findBody() || body).innerText.replace(/\n?…\s*more\s*$/, "").trim();
+              if (liveText.length > 20) {
+                const repost = ((data.post && data.post.text) || "").match(/^\[Reposted by [^\]]+\]\n\n/);
+                data.post.text = (repost ? repost[0] : "") + liveText;
+              }
+            }
+            data.comments = comments;
+            data.engagement.comments = sduiCommentCount(sduiScope) || data.engagement.comments;
+          }
+        }
         if (data && data._debug) data._debug.expansion = expansion;
         const markdown = formatAsMarkdown(data);
         sendResponse({ data, markdown });

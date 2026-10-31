@@ -28,14 +28,11 @@
       data.comments.forEach((comment, i) => {
         const likesStr = comment.likes > 0 ? ` (${comment.likes} likes)` : "";
         lines.push(`${i + 1}. **@${comment.author}**${comment.headline ? ` - ${comment.headline}` : ""}${likesStr}`);
-        lines.push(`   > ${comment.text}`);
-        if (comment.timestamp) {
-          lines.push(`   _${comment.timestamp}_`);
-        }
+        lines.push(`   > ${comment.text.replace(/\n+/g, "\n   > ")}`);
         if (comment.replies.length > 0) {
           comment.replies.forEach((reply) => {
             const replyLikes = reply.likes > 0 ? ` (${reply.likes} likes)` : "";
-            lines.push(`   - **@${reply.author}**${reply.headline ? ` - ${reply.headline}` : ""}${replyLikes}: ${reply.text}`);
+            lines.push(`   - **@${reply.author}**${reply.headline ? ` - ${reply.headline}` : ""}${replyLikes}: ${reply.text.replace(/\n+/g, "\n     ")}`);
           });
         }
         lines.push("");
