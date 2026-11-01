@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="https://chromewebstore.google.com/detail/riff-linkedin-engagement/hbbgiicapcnfcamdpinhkgkjljpnfffn"><img src="https://img.shields.io/badge/Chrome%20Web%20Store-Install-C2410C?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Chrome Web Store"></a>
+  <a href="https://chromewebstore.google.com/detail/hbbgiicapcnfcamdpinhkgkjljpnfffn"><img src="https://img.shields.io/badge/Chrome%20Web%20Store-Install-C2410C?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Chrome Web Store"></a>
   <a href="https://youtu.be/AaOW4TciVzs"><img src="https://img.shields.io/badge/Watch%20Demo-YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="YouTube Demo"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-10B981?style=for-the-badge" alt="MIT License"></a>
 </p>
@@ -42,7 +42,7 @@ LinkedIn shows you a sample of the comments. The default view picks the "most re
 
 ### Step 1: Install Riff
 
-<a href="https://chromewebstore.google.com/detail/riff-linkedin-engagement/hbbgiicapcnfcamdpinhkgkjljpnfffn">
+<a href="https://chromewebstore.google.com/detail/hbbgiicapcnfcamdpinhkgkjljpnfffn">
   <img src="https://img.shields.io/badge/Get%20Riff-Chrome%20Web%20Store-C2410C?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Install from Chrome Web Store">
 </a>
 
@@ -66,7 +66,7 @@ You'll see a popup with a big button:
 
 **➡️ Click "Get post + every comment"**
 
-On a post page Riff expands the comment thread for you: it clicks "Load more comments" and "load previous replies" until the count matches the post's comment counter, then reads everything. Up to about 15 seconds on a busy post. It then shows you:
+Riff expands the comment thread for you, in the feed or on the post's own page. It switches LinkedIn's sort from "Most relevant" to "Most recent", because "Most relevant" hides some comments for good, then loads more comments and replies until the count matches the post's comment counter. Up to about 15 seconds on a busy post. It then shows you:
 - How many comments were found, against the total the post reports
 - A preview of the extracted content
 
@@ -89,7 +89,7 @@ See interesting post → Click Riff → Extract → Send to AI → Ask your ques
 | Problem | Fix |
 |---------|-----|
 | "No LinkedIn post found" | Make sure you're on linkedin.com |
-| Fewer comments than the post reports | Click "Re-extract"; LinkedIn sometimes loads the thread slowly. On the feed page Riff reads what is visible, so open the post first |
+| Fewer comments than the post reports | Click "Re-extract"; LinkedIn sometimes loads the thread slowly. If it is still short, open the post on its own page and try again |
 | "Send to Claude" copied to clipboard instead | Chrome's permission prompt was declined, or the AI's message box has changed. Paste with Cmd+V / Ctrl+V and open an issue |
 | Wrong post extracted | Scroll so the post you want is centered on screen, then try again |
 | Extension not responding | Refresh the LinkedIn page (Cmd+R / Ctrl+R) and try again |
@@ -113,7 +113,7 @@ Riff never writes a comment for you.
 
 - Post author name and headline
 - Full post text (including "see more" content)
-- All visible comments with author names, headlines, and timestamps
+- Every comment, with author names, headlines, and timestamps
 - Nested replies and threads
 - Repost attribution (who reposted what)
 - Post type detection (text, image, video, article, poll, document)
@@ -121,7 +121,7 @@ Riff never writes a comment for you.
 
 ### Works Everywhere on LinkedIn
 
-- **Feed page**: Extracts the post closest to the center of your screen
+- **Feed page**: Extracts the post closest to the center of your screen, with every comment expanded
 - **Single post pages**: Full extraction with all comments, expanded for you
 - **Reposts**: Shows original author + repost attribution
 - **Video posts**: Extracts text without video player UI contamination
@@ -136,7 +136,7 @@ Pick Claude, ChatGPT or Gemini once. From then on one click opens the AI with th
 
 ### Chrome Web Store (Recommended)
 
-<a href="https://chromewebstore.google.com/detail/riff-linkedin-engagement/hbbgiicapcnfcamdpinhkgkjljpnfffn">
+<a href="https://chromewebstore.google.com/detail/hbbgiicapcnfcamdpinhkgkjljpnfffn">
   <img src="https://img.shields.io/badge/Get%20Riff-Chrome%20Web%20Store-C2410C?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Install from Chrome Web Store">
 </a>
 
@@ -213,9 +213,9 @@ There are no instructions at the bottom. Type your own question under the thread
 ```
 riff/
 ├── manifest.json          # MV3 extension config
-├── content.js             # Thread reader (dual extraction paths)
-│   ├── Single post path   # Class-based selectors, expands the comment thread first
-│   └── Feed page path     # Semantic selectors (role, aria-label, data-testid)
+├── content.js             # Thread reader
+│   ├── Current layout     # Comment ids, sort switch, scrolls the comment list
+│   └── Older layout       # Class-based and semantic selectors, kept as fallback
 ├── background.js          # Opens the AI tab and injects the filler once it has loaded
 ├── ai-fill.js             # Finds the composer on claude.ai / chatgpt.com / gemini and pastes
 ├── popup.html/js/css      # Dark theme popup UI
@@ -225,12 +225,12 @@ riff/
 
 ### How It Keeps Working When LinkedIn Changes
 
-LinkedIn uses **hashed CSS classes** on the feed page that change with every deploy. Riff uses two extraction strategies:
+LinkedIn now builds both the feed and post pages from server-driven UI, with **hashed CSS classes** that change with every deploy. Riff avoids those classes:
 
-1. **Single post pages** (`/feed/update/...`): Class-based selectors that are stable
-2. **Feed page**: Semantic DOM anchors (`role="listitem"`, `aria-label`, `data-component-type`) that survive class name changes
+1. **Current layout**: each comment carries an id starting with `replaceableComment_urn:li:comment:`. Riff finds comments by that id, tells replies apart by their indent, and scrolls the comment list until the count matches the post.
+2. **Older layout**: class-based selectors on post pages and semantic anchors (`role="listitem"`, `aria-label`, `data-component-type`) on the feed. Riff falls back to these when the comment ids are missing.
 
-This dual-path architecture means Riff keeps working even when LinkedIn changes their frontend.
+When LinkedIn changes the page again, the fix usually goes in one of these two paths.
 
 ---
 
