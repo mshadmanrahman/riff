@@ -1,0 +1,20 @@
+{
+  "mode": "REPLY",
+  "extractedAt": "2026-09-29",
+  "source": "pasted page text, not extension JSON",
+  "post": {
+    "author": "Shadman Rahman",
+    "type": "video",
+    "url": "https://www.linkedin.com/posts/shadmanrahman_opus-55-made-this-video-every-frame-of-ugcPost-7510259514332397568-lucW/",
+    "text": "Opus 5.5 made this video. Every frame of it, in code! ... reviewer agent critique loop ... six notes on v1 ... every number real, 966 memory files ... free site for teachers, designers, marketers and HR teams."
+  },
+  "comments": [
+    {
+      "author": "Laurent Chevrette",
+      "headline": "Fullstack Web Developer at Mondzo | Web & AI Studio · Montreal",
+      "text": "The iterative critique loop is the real insight here—watching an AI fail then improve mirrors actual design work. How did you decide which of its self-critiques to accept versus override?",
+      "timestamp": "2h",
+      "likes": 1
+    }
+  ]
+}

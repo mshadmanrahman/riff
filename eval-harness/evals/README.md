@@ -13,7 +13,7 @@ Riff drafts go straight onto LinkedIn under your name. A bad draft is publicly v
 ## Directory layout
 
 ```
-_work/riff/evals/
+_opensource/riff/eval-harness/evals/
 ├── README.md                 # this file
 ├── runner.py                 # runs all evals on all traces, prints summary
 ├── buckets.md                # named failure categories (fill AFTER error analysis, not before)
@@ -72,7 +72,7 @@ Likely future evals based on what is already documented as Riff failure modes (d
 ### Step 3: Run, validate, iterate
 
 ```bash
-cd _work/riff/evals
+cd _opensource/riff/eval-harness/evals
 python3 runner.py
 ```
 
